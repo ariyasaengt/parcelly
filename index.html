@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Smart Parcel Manager</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { font-family: 'Noto Sans Thai', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .tab-btn.active { color: #4f46e5; }
+  .tab-btn.active .tab-dot { background: #4f46e5; }
+  .tbl th { font-weight: 600; font-size: .75rem; color: #475569; text-align: left; padding: .5rem .5rem; background: #f1f5f9; white-space: nowrap; }
+  .tbl td { padding: .35rem .5rem; border-top: 1px solid #e2e8f0; vertical-align: middle; }
+  .inp { width: 100%; border: 1px solid #cbd5e1; border-radius: .5rem; padding: .45rem .6rem; font-size: .9rem; background: #fff; }
+  .inp:focus { outline: 2px solid #818cf8; border-color: #818cf8; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; border-radius: .6rem; padding: .55rem .9rem; font-weight: 600; font-size: .9rem; transition: transform .05s, opacity .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: #4f46e5; color: #fff; }
+  .btn-green { background: #16a34a; color: #fff; }
+  .btn-line { background: #06c755; color: #fff; }
+  .btn-red { background: #dc2626; color: #fff; }
+  .btn-amber { background: #f59e0b; color: #fff; }
+  .btn-ghost { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+  .card { background: #fff; border-radius: 1rem; box-shadow: 0 1px 3px rgba(15,23,42,.08); padding: 1rem; }
+  .flash { animation: flash .25s ease-out; }
+  @keyframes flash { from { opacity: .2; } to { opacity: 1; } }
+  .row-new { background: #f0fdf4; }
+  .row-old { background: #fffbeb; }
+  .row-crit { background: #fef2f2; }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+<!-- Loading overlay -->
+<div id="loading" class="hidden fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl px-6 py-5 flex items-center gap-3 shadow-xl">
+    <svg class="animate-spin h-6 w-6 text-indigo-600" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
+    <span id="loadingMsg" class="font-medium">กำลังทำงาน...</span>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-[110] max-w-[92vw] px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium text-white"></div>
+
+<!-- ======================= AUTH ======================= -->
+<section id="authView" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-5">
+      <div class="text-5xl mb-2">📦</div>
+      <h1 class="text-2xl font-bold text-indigo-700">Smart Parcel Manager</h1>
+      <p class="text-slate-500 text-sm">ระบบจัดการพัสดุหอพักด้วย AI</p>
+    </div>
+    <div class="card">
+      <div class="grid grid-cols-2 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
+        <button id="tabLogin" class="py-2 rounded-lg font-semibold text-sm bg-white shadow">เข้าสู่ระบบ</button>
+        <button id="tabRegister" class="py-2 rounded-lg font-semibold text-sm text-slate-500">สร้างหอพักใหม่</button>
+      </div>
+      <form id="loginForm" class="space-y-3">
+        <div><label class="text-xs font-semibold text-slate-600">ชื่อหอพัก</label><input id="lDorm" class="inp mt-1" autocomplete="organization" required></div>
+        <div><label class="text-xs font-semibold text-slate-600">Username</label><input id="lUser" class="inp mt-1" autocomplete="username" required></div>
+        <div><label class="text-xs font-semibold text-slate-600">รหัสผ่าน</label><input id="lPass" type="password" class="inp mt-1" autocomplete="current-password" required></div>
+        <button class="btn btn-primary w-full">เข้าสู่ระบบ</button>
+      </form>
+      <form id="registerForm" class="space-y-3 hidden">
+        <div><label class="text-xs font-semibold text-slate-600">ชื่อหอพัก</label><input id="rDorm" class="inp mt-1" required></div>
+        <div><label class="text-xs font-semibold text-slate-600">Username แอดมิน (3-40 ตัว ไม่มีเว้นวรรค)</label><input id="rUser" class="inp mt-1" autocomplete="username" required></div>
+        <div><label class="text-xs font-semibold text-slate-600">รหัสผ่านแอดมิน (อย่างน้อย 6 ตัว)</label><input id="rPass" type="password" class="inp mt-1" autocomplete="new-password" required></div>
+        <div><label class="text-xs font-semibold text-slate-600">ยืนยันรหัสผ่าน</label><input id="rPass2" type="password" class="inp mt-1" autocomplete="new-password" required></div>
+        <button class="btn btn-green w-full">สร้างหอพัก</button>
+      </form>
+      <p id="apiWarn" class="hidden mt-3 text-xs text-red-600 bg-red-50 rounded-lg p-2">⚠️ ยังไม่ได้ตั้งค่า API_URL ในไฟล์ index.html</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= APP ======================= -->
+<div id="appView" class="hidden">
+  <header class="sticky top-0 z-30 bg-indigo-600 text-white shadow">
+    <div class="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <div class="min-w-0">
+        <div id="hDorm" class="font-bold truncate">หอพัก</div>
+        <div id="hUser" class="text-xs text-indigo-100 truncate"></div>
+      </div>
+      <button id="btnLogout" class="text-xs bg-white/15 hover:bg-white/25 rounded-lg px-3 py-1.5">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-3 pt-3 pb-28">
+
+    <!-- TAB 1: SCAN -->
+    <section id="tab-scan" class="space-y-3">
+      <div class="card">
+        <h2 class="font-bold mb-2">📷 ถ่าย / อัปโหลดรูปพัสดุ</h2>
+        <div class="flex flex-wrap gap-2">
+          <button id="btnCam" class="btn btn-primary">📸 เปิดกล้อง</button>
+          <button id="btnPick" class="btn btn-ghost">🖼️ อัปโหลดจากอัลบั้ม</button>
+          <input id="fileInput" type="file" accept="image/*" multiple class="hidden">
+          <input id="camInput" type="file" accept="image/*" capture="environment" class="hidden">
+        </div>
+        <div id="thumbs" class="flex gap-2 overflow-x-auto mt-3 pb-1"></div>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <button id="btnScan" class="btn btn-green" disabled>✨ ให้ AI อ่านข้อมูล (<span id="imgCount">0</span> รูป)</button>
+          <button id="btnClearImgs" class="btn btn-ghost">ล้างรูป</button>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">รูปทั้งหมดจะถูกส่งในคำขอเดียว แล้วให้ AI อ่านพร้อมกันแบบขนาน</p>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+          <h2 class="font-bold">📋 รายการพัสดุที่อ่านได้ (<span id="rowCount">0</span>)</h2>
+          <div class="flex gap-2">
+            <button id="btnAddRow" class="btn btn-ghost">➕ เพิ่มแถว</button>
+            <button id="btnSave" class="btn btn-primary">💾 บันทึกเข้าคลัง</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto rounded-lg border border-slate-200">
+          <table class="tbl w-full min-w-[520px]">
+            <thead><tr><th class="w-8">#</th><th>ห้อง / ชื่อ</th><th class="w-28">ขนส่ง</th><th class="w-28">COD (บาท)</th><th class="w-14"></th></tr></thead>
+            <tbody id="rowsBody"></tbody>
+          </table>
+        </div>
+        <div class="mt-2"><button id="btnResetRows" class="text-xs text-slate-500 underline">เริ่มรอบใหม่ (ล้างรายการทั้งหมด)</button></div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+          <h2 class="font-bold">💬 ข้อความแจ้งเตือนทาง LINE</h2>
+          <button id="btnRegen" class="text-xs text-indigo-600 underline">สร้างข้อความใหม่</button>
+        </div>
+        <textarea id="lineText" rows="9" class="inp font-mono text-sm" placeholder="ข้อความจะถูกสร้างอัตโนมัติ โดยรวมพัสดุที่ชื่อ/ห้องเดียวกันไว้ด้วยกัน"></textarea>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button id="btnLineOpen" class="btn btn-line">เปิดแอป LINE</button>
+          <button id="btnLineCopy" class="btn btn-ghost">📋 คัดลอก</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: INVENTORY -->
+    <section id="tab-stock" class="hidden space-y-3">
+      <div class="card">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="font-bold">🗄️ พัสดุค้างรับ (<span id="pendCount">0</span>)</h2>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnReceiveSel" class="btn btn-green">✅ รับแล้ว (ที่เลือก)</button>
+            <button id="btnRemind" class="btn btn-line">ทวงของค้าง LINE</button>
+            <button id="btnReload" class="btn btn-ghost">🔄</button>
+            <button id="btnClearAll" class="btn btn-red owner-only">🗑️ ล้างทั้งหมด</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-3 text-xs">
+          <span class="px-2 py-1 rounded-full bg-green-100 text-green-700">เข้าใหม่ (0-2 วัน): <b id="cNew">0</b></span>
+          <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700">ค้างนาน (3-6 วัน): <b id="cOld">0</b></span>
+          <span class="px-2 py-1 rounded-full bg-red-100 text-red-700">วิกฤต (7+ วัน): <b id="cCrit">0</b></span>
+        </div>
+      </div>
+      <div class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="tbl w-full min-w-[640px]">
+            <thead><tr>
+              <th class="w-8"><input type="checkbox" id="chkAll"></th><th>ห้อง / ชื่อ</th><th>ขนส่ง</th><th>COD</th><th>วันที่เข้า</th><th>ค้าง</th><th>สถานะ</th><th></th>
+            </tr></thead>
+            <tbody id="stockBody"></tbody>
+          </table>
+        </div>
+        <div id="stockEmpty" class="hidden text-center text-slate-400 py-8 text-sm">ไม่มีพัสดุค้างรับ 🎉</div>
+      </div>
+    </section>
+
+    <!-- TAB 3: STATS -->
+    <section id="tab-stats" class="hidden space-y-3">
+      <div class="card">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div><label class="text-xs font-semibold text-slate-600">เดือน</label><input id="monthPick" type="month" class="inp mt-1"></div>
+          <div class="sm:col-span-2"><label class="text-xs font-semibold text-slate-600">ค้นหา ชื่อ / ห้อง</label><input id="statSearch" class="inp mt-1" placeholder="เช่น 302 หรือ สมชาย"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+          <div class="bg-indigo-50 rounded-xl p-3"><div class="text-xs text-indigo-600">พัสดุรวม</div><div id="sTotal" class="text-2xl font-bold text-indigo-700">0</div></div>
+          <div class="bg-emerald-50 rounded-xl p-3"><div class="text-xs text-emerald-600">จำนวนห้องที่ได้รับ</div><div id="sRooms" class="text-2xl font-bold text-emerald-700">0</div></div>
+          <div class="bg-amber-50 rounded-xl p-3"><div class="text-xs text-amber-600">เฉลี่ยต่อห้อง</div><div id="sAvg" class="text-2xl font-bold text-amber-700">0</div><div id="sAvgDay" class="text-[11px] text-amber-600"></div></div>
+        </div>
+        <div class="mt-3"><button id="btnCsv" class="btn btn-ghost">⬇️ ดาวน์โหลด Excel/CSV</button></div>
+      </div>
+      <div class="card p-0 overflow-hidden">
+        <div class="px-4 pt-3 font-bold">ยอดสะสมรายห้อง</div>
+        <div class="overflow-x-auto mt-2">
+          <table class="tbl w-full min-w-[480px]">
+            <thead><tr><th>ห้อง / ชื่อ</th><th class="text-right">จำนวน (ชิ้น)</th><th class="text-right">COD รวม (บาท)</th><th>ล่าสุด</th></tr></thead>
+            <tbody id="statBody"></tbody>
+          </table>
+        </div>
+        <div id="statEmpty" class="hidden text-center text-slate-400 py-8 text-sm">ไม่มีข้อมูลในเดือนที่เลือก</div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SETTINGS -->
+    <section id="tab-settings" class="hidden space-y-3">
+      <div class="card">
+        <h2 class="font-bold mb-1">✏️ Template ข้อความ LINE</h2>
+        <p class="text-xs text-slate-500 mb-2">ใช้ตัวแปร <code>{dormName}</code> และ <code>{date}</code> ได้ในข้อความ</p>
+        <label class="text-xs font-semibold text-slate-600">Header</label>
+        <textarea id="tplHeader" rows="3" class="inp mt-1"></textarea>
+        <label class="text-xs font-semibold text-slate-600 mt-2 block">Footer</label>
+        <textarea id="tplFooter" rows="3" class="inp mt-1"></textarea>
+        <div class="mt-2 flex items-center gap-2">
+          <button id="btnSaveTpl" class="btn btn-primary owner-only">💾 บันทึก Template</button>
+          <span id="tplHint" class="text-xs text-slate-400 hidden">เฉพาะเจ้าของหอพักเท่านั้นที่แก้ไขได้</span>
+        </div>
+      </div>
+      <div class="card owner-only">
+        <h2 class="font-bold mb-2">👥 เพิ่มบัญชี Staff</h2>
+        <form id="staffForm" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input id="stUser" class="inp" placeholder="Username (3-40 ตัว)" autocomplete="off" required>
+          <input id="stPass" type="password" class="inp" placeholder="รหัสผ่าน (6+ ตัว)" autocomplete="new-password" required>
+          <button class="btn btn-green">เพิ่ม Staff</button>
+        </form>
+        <p class="text-xs text-slate-500 mt-2">Staff ใช้ชื่อหอพักเดียวกันในการเข้าสู่ระบบ และจัดการพัสดุได้ แต่ตั้งค่า/ล้างข้อมูล/เพิ่มทีมไม่ได้</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom nav -->
+  <nav class="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200" style="padding-bottom: env(safe-area-inset-bottom)">
+    <div class="max-w-5xl mx-auto grid grid-cols-4">
+      <button class="tab-btn active py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="scan"><span class="text-xl">📷</span>สแกน</button>
+      <button class="tab-btn py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="stock"><span class="text-xl">🗄️</span>คลัง</button>
+      <button class="tab-btn py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="stats"><span class="text-xl">📊</span>สถิติ</button>
+      <button class="tab-btn py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="settings"><span class="text-xl">⚙️</span>ตั้งค่า</button>
+    </div>
+  </nav>
+</div>
+
+<!-- Camera modal -->
+<div id="camModal" class="hidden fixed inset-0 z-[90] bg-black flex flex-col">
+  <div class="flex-1 relative min-h-0">
+    <video id="camVideo" class="absolute inset-0 w-full h-full object-contain bg-black" autoplay playsinline muted></video>
+    <div id="camFlash" class="absolute inset-0 bg-white opacity-0 pointer-events-none"></div>
+    <div class="absolute top-3 left-3 bg-black/60 text-white text-sm rounded-full px-3 py-1">ถ่ายแล้ว <b id="camCount">0</b> รูป</div>
+  </div>
+  <div id="camStrip" class="flex gap-2 overflow-x-auto px-3 py-2 bg-black/80 min-h-[56px]"></div>
+  <div class="bg-black px-6 py-4 flex items-center justify-between" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))">
+    <button id="camCancel" class="text-white text-sm px-3 py-2">ปิด</button>
+    <button id="camShutter" class="w-16 h-16 rounded-full bg-white border-4 border-slate-400 active:scale-90 transition"></button>
+    <button id="camDone" class="bg-green-500 text-white font-semibold rounded-xl px-4 py-2">เสร็จสิ้น</button>
+  </div>
+</div>
+
+<!-- Generic LINE modal -->
+<div id="lineModal" class="hidden fixed inset-0 z-[80] bg-slate-900/60 flex items-end sm:items-center justify-center p-3">
+  <div class="bg-white rounded-2xl w-full max-w-lg p-4">
+    <h3 id="lmTitle" class="font-bold mb-2">ข้อความ LINE</h3>
+    <textarea id="lmText" rows="12" class="inp font-mono text-sm"></textarea>
+    <div class="mt-3 flex flex-wrap gap-2 justify-end">
+      <button id="lmClose" class="btn btn-ghost">ปิด</button>
+      <button id="lmCopy" class="btn btn-ghost">📋 คัดลอก</button>
+      <button id="lmOpen" class="btn btn-line">เปิดแอป LINE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ *  ตั้งค่า: ใส่ Web app URL ที่ได้จากการ Deploy Apps Script
+ * ============================================================ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbz-y6LW1eyRWf3Y-Lrr9mazUcbd_htbPNQMoHYBBc3anaMlykIBwcPMXuGUoYaFQ8bD/exec';
+
+/* ============================================================
+ *  State & helpers
+ * ============================================================ */
+const COURIERS = ['Flash', 'SPX', 'J&T', 'KEX', 'EMS', 'Other'];
+const S = {
+  token: null, user: null, dorm: null,
+  images: [],          // [{id, dataUrl}]
+  rows: [],            // [{uid, target, courier, cod, saved}]
+  parcels: [],         // จากเซิร์ฟเวอร์
+  tab: 'scan', stream: null, lineEdited: false, uid: 1, selected: {}
+};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let toastTimer = null;
+function toast(msg, type) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'fixed top-3 left-1/2 -translate-x-1/2 z-[110] max-w-[92vw] px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium text-white ' +
+    (type === 'error' ? 'bg-red-600' : type === 'warn' ? 'bg-amber-500' : 'bg-slate-800');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), type === 'error' ? 5000 : 2600);
+}
+function showLoading(msg) { $('loadingMsg').textContent = msg || 'กำลังทำงาน...'; $('loading').classList.remove('hidden'); }
+function hideLoading() { $('loading').classList.add('hidden'); }
+
+async function api(action, payload) {
+  if (!API_URL || API_URL.indexOf('PASTE_') === 0) throw new Error('ยังไม่ได้ตั้งค่า API_URL ใน index.html');
+  const body = Object.assign({ action: action, token: S.token }, payload || {});
+  let res;
+  try {
+    res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  } catch (e) { throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); }
+  let data;
+  try { data = await res.json(); } catch (e) { throw new Error('เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ (ตรวจสอบการ Deploy: Who has access = Anyone)'); }
+  if (!data.ok) {
+    const err = new Error(data.error || 'เกิดข้อผิดพลาด');
+    err.code = data.code;
+    if (data.code === 'AUTH' && S.token) { doLogout(true); }
+    throw err;
+  }
+  return data;
+}
+
+async function run(msg, fn) {
+  showLoading(msg);
+  try { return await fn(); }
+  catch (e) { toast(e.message || String(e), 'error'); return null; }
+  finally { hideLoading(); }
+}
+
+const normKey = (s) => String(s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+const fmtDate = (iso) => {
+  const d = new Date(iso);
+  if (isNaN(d)) return '-';
+  return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+};
+const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const daysSince = (iso) => {
+  const d = new Date(iso);
+  if (isNaN(d)) return 0;
+  return Math.max(0, Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000));
+};
+const codNum = (c) => { const n = parseFloat(String(c || '').replace(/,/g, '')); return isNaN(n) ? 0 : n; };
+const todayTh = () => new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+
+function applyTpl(t) {
+  return String(t || '').replace(/\{dormName\}/g, S.dorm ? S.dorm.dormName : '').replace(/\{date\}/g, todayTh());
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast('คัดลอกแล้ว'); }
+  catch (e) {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('คัดลอกแล้ว'); } catch (e2) { toast('คัดลอกไม่สำเร็จ', 'error'); }
+    document.body.removeChild(ta);
+  }
+}
+function openLine(text) {
+  if (!String(text || '').trim()) { toast('ไม่มีข้อความ', 'warn'); return; }
+  window.open('https://line.me/R/msg/text/?' + encodeURIComponent(text), '_blank');
+}
+
+/* ============================================================
+ *  PWA (manifest สร้างจาก JS + service worker ถ้ามีไฟล์ sw.js)
+ * ============================================================ */
+(function initPwa() {
+  try {
+    const icon = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#4f46e5"/><text x="256" y="350" font-size="280" text-anchor="middle">📦</text></svg>');
+    const manifest = {
+      name: 'Smart Parcel Manager', short_name: 'Parcel', display: 'standalone', orientation: 'portrait',
+      start_url: location.href.split('#')[0], scope: location.href.split('#')[0].replace(/[^/]*$/, ''),
+      background_color: '#f1f5f9', theme_color: '#4f46e5',
+      icons: [{ src: icon, sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }]
+    };
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
+    document.head.appendChild(link);
+    const apple = document.createElement('link'); apple.rel = 'apple-touch-icon'; apple.href = icon; document.head.appendChild(apple);
+  } catch (e) { /* ignore */ }
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+
+/* ============================================================
+ *  Auth
+ * ============================================================ */
+function setAuthTab(mode) {
+  const login = mode === 'login';
+  $('loginForm').classList.toggle('hidden', !login);
+  $('registerForm').classList.toggle('hidden', login);
+  $('tabLogin').className = 'py-2 rounded-lg font-semibold text-sm ' + (login ? 'bg-white shadow' : 'text-slate-500');
+  $('tabRegister').className = 'py-2 rounded-lg font-semibold text-sm ' + (!login ? 'bg-white shadow' : 'text-slate-500');
+}
+$('tabLogin').onclick = () => setAuthTab('login');
+$('tabRegister').onclick = () => setAuthTab('register');
+
+function applySession(data) {
+  S.token = data.token; S.user = data.user; S.dorm = data.dorm;
+  try { localStorage.setItem('spm_token', S.token); } catch (e) {}
+}
+
+function enterApp() {
+  $('authView').classList.add('hidden');
+  $('appView').classList.remove('hidden');
+  $('hDorm').textContent = S.dorm.dormName;
+  $('hUser').textContent = S.user.username + ' • ' + (S.user.role === 'owner' ? 'เจ้าของหอพัก' : 'Staff');
+  const isOwner = S.user.role === 'owner';
+  document.querySelectorAll('.owner-only').forEach((el) => el.classList.toggle('hidden', !isOwner));
+  $('tplHint').classList.toggle('hidden', isOwner);
+  $('tplHeader').value = S.dorm.tplHeader || '';
+  $('tplFooter').value = S.dorm.tplFooter || '';
+  $('tplHeader').disabled = !isOwner; $('tplFooter').disabled = !isOwner;
+  $('monthPick').value = new Date().toISOString().slice(0, 7);
+  const d = new Date(); $('monthPick').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  switchTab('scan');
+  refreshLine(true);
+  loadParcels(true);
+}
+
+function showAuth() {
+  $('appView').classList.add('hidden');
+  $('authView').classList.remove('hidden');
+  $('apiWarn').classList.toggle('hidden', !(API_URL.indexOf('PASTE_') === 0));
+}
+
+function doLogout(silent) {
+  S.token = null; S.user = null; S.dorm = null; S.rows = []; S.images = []; S.parcels = []; S.selected = {};
+  try { localStorage.removeItem('spm_token'); } catch (e) {}
+  renderThumbs(); renderRows();
+  showAuth();
+  if (!silent) toast('ออกจากระบบแล้ว');
+}
+$('btnLogout').onclick = () => doLogout(false);
+
+$('loginForm').onsubmit = async (ev) => {
+  ev.preventDefault();
+  const data = await run('กำลังเข้าสู่ระบบ...', () => api('login', { dormName: $('lDorm').value, username: $('lUser').value, password: $('lPass').value }));
+  if (data) { applySession(data); $('lPass').value = ''; enterApp(); }
+};
+$('registerForm').onsubmit = async (ev) => {
+  ev.preventDefault();
+  if ($('rPass').value !== $('rPass2').value) { toast('รหัสผ่านยืนยันไม่ตรงกัน', 'error'); return; }
+  const data = await run('กำลังสร้างหอพัก...', () => api('register_owner', { dormName: $('rDorm').value, username: $('rUser').value, password: $('rPass').value }));
+  if (data) { applySession(data); $('rPass').value = ''; $('rPass2').value = ''; enterApp(); toast('สร้างหอพักสำเร็จ 🎉'); }
+};
+
+/* ============================================================
+ *  Tabs
+ * ============================================================ */
+function switchTab(tab) {
+  S.tab = tab;
+  ['scan', 'stock', 'stats', 'settings'].forEach((t) => $('tab-' + t).classList.toggle('hidden', t !== tab));
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  window.scrollTo({ top: 0 });
+  if (tab === 'stock' || tab === 'stats') loadParcels(false);
+}
+document.querySelectorAll('.tab-btn').forEach((b) => { b.onclick = () => switchTab(b.dataset.tab); });
+
+/* ============================================================
+ *  TAB 1 — รูปภาพ / กล้อง
+ * ============================================================ */
+function fileToDataUrl(file) {
+  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
+}
+function compress(dataUrl, max, q) {
+  max = max || 1400; q = q || 0.82;
+  return new Promise((res) => {
+    const img = new Image();
+    img.onload = () => {
+      const r = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.round(img.width * r), h = Math.round(img.height * r);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      res(c.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => res(dataUrl);
+    img.src = dataUrl;
+  });
+}
+function addImage(dataUrl) { S.images.push({ id: S.uid++, dataUrl: dataUrl }); renderThumbs(); }
+
+function renderThumbs() {
+  $('thumbs').innerHTML = S.images.map((im) =>
+    '<div class="relative shrink-0"><img src="' + im.dataUrl + '" class="h-20 w-20 object-cover rounded-lg border border-slate-200">' +
+    '<button data-del-img="' + im.id + '" class="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full w-5 h-5 text-xs leading-5">×</button></div>').join('');
+  $('imgCount').textContent = S.images.length;
+  $('btnScan').disabled = S.images.length === 0;
+}
+$('thumbs').onclick = (e) => {
+  const id = e.target.getAttribute('data-del-img');
+  if (id) { S.images = S.images.filter((im) => String(im.id) !== id); renderThumbs(); }
+};
+$('btnClearImgs').onclick = () => { S.images = []; renderThumbs(); };
+
+async function handleFiles(files) {
+  if (!files || !files.length) return;
+  showLoading('กำลังเตรียมรูป...');
+  try {
+    for (const f of Array.from(files)) {
+      const raw = await fileToDataUrl(f);
+      addImage(await compress(raw));
+    }
+  } catch (e) { toast('อ่านรูปไม่สำเร็จ', 'error'); }
+  finally { hideLoading(); }
+}
+$('btnPick').onclick = () => $('fileInput').click();
+$('fileInput').onchange = async (e) => { await handleFiles(e.target.files); e.target.value = ''; };
+$('camInput').onchange = async (e) => { await handleFiles(e.target.files); e.target.value = ''; };
+
+/* --- กล้องถ่ายต่อเนื่อง --- */
+let camShots = 0;
+async function openCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('camInput').click(); return; }
+  try {
+    S.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } }, audio: false });
+  } catch (e) {
+    toast('เปิดกล้องในหน้านี้ไม่ได้ ใช้กล้องของเครื่องแทน', 'warn');
+    $('camInput').click();
+    return;
+  }
+  camShots = 0; $('camCount').textContent = '0'; $('camStrip').innerHTML = '';
+  $('camVideo').srcObject = S.stream;
+  $('camModal').classList.remove('hidden');
+}
+function closeCamera() {
+  if (S.stream) { S.stream.getTracks().forEach((t) => t.stop()); S.stream = null; }
+  $('camVideo').srcObject = null;
+  $('camModal').classList.add('hidden');
+}
+$('btnCam').onclick = openCamera;
+$('camCancel').onclick = closeCamera;
+$('camDone').onclick = () => { const n = camShots; closeCamera(); if (n) toast('เพิ่ม ' + n + ' รูปแล้ว'); };
+$('camShutter').onclick = async () => {
+  const v = $('camVideo');
+  if (!v.videoWidth) return;
+  const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  const small = await compress(c.toDataURL('image/jpeg', 0.9));
+  addImage(small);
+  camShots++;
+  $('camCount').textContent = camShots;
+  const strip = $('camStrip'); const im = document.createElement('img');
+  im.src = small; im.className = 'h-12 w-12 object-cover rounded border border-white/40 shrink-0';
+  strip.appendChild(im); strip.scrollLeft = strip.scrollWidth;
+  const f = $('camFlash'); f.style.transition = 'none'; f.style.opacity = '.7';
+  requestAnimationFrame(() => { f.style.transition = 'opacity .25s'; f.style.opacity = '0'; });
+  if (navigator.vibrate) navigator.vibrate(30);
+};
+
+/* --- สั่ง AI อ่านพร้อมกัน --- */
+$('btnScan').onclick = async () => {
+  if (!S.images.length) return;
+  const count = S.images.length;
+  const data = await run('AI กำลังอ่านข้อมูล ' + count + ' รูป...', () => api('ai_scan_batch', { images: S.images.map((im) => im.dataUrl) }));
+  if (!data) return;
+  let ok = 0, bad = 0, firstErr = '';
+  data.results.forEach((r) => {
+    if (r && r.ok) { ok++; S.rows.push({ uid: S.uid++, target: r.target || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }); }
+    else { bad++; if (!firstErr) firstErr = (r && r.error) || ''; S.rows.push({ uid: S.uid++, target: '', courier: 'Other', cod: 'None', saved: false }); }
+  });
+  S.images = []; renderThumbs();
+  renderRows(); refreshLine(false);
+  if (bad) toast('อ่านสำเร็จ ' + ok + ' / ' + count + ' รูป — ' + (firstErr || 'กรอกข้อมูลที่ขาดเอง'), 'warn');
+  else toast('AI อ่านข้อมูลสำเร็จ ' + ok + ' รายการ ✓');
+};
+
+/* --- ตารางแก้ไขได้ --- */
+function renderRows() {
+  $('rowCount').textContent = S.rows.length;
+  if (!S.rows.length) {
+    $('rowsBody').innerHTML = '<tr><td colspan="5" class="text-center text-slate-400 py-6 text-sm">ยังไม่มีรายการ — สแกนรูป หรือกด "เพิ่มแถว"</td></tr>';
+    return;
+  }
+  $('rowsBody').innerHTML = S.rows.map((r, i) =>
+    '<tr data-uid="' + r.uid + '" class="' + (r.saved ? 'bg-green-50' : '') + '">' +
+    '<td class="text-xs text-slate-400">' + (i + 1) + '</td>' +
+    '<td><input class="inp" data-f="target" value="' + esc(r.target) + '" placeholder="ห้อง/ชื่อ"></td>' +
+    '<td><select class="inp" data-f="courier">' + COURIERS.map((c) => '<option' + (c === r.courier ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></td>' +
+    '<td><input class="inp" data-f="cod" inputmode="decimal" value="' + esc(r.cod) + '"></td>' +
+    '<td class="text-center">' + (r.saved ? '<span class="text-green-600 text-xs">✓</span> ' : '') + '<button data-del-row="' + r.uid + '" class="text-red-600 text-lg">🗑</button></td></tr>').join('');
+}
+$('rowsBody').addEventListener('input', (e) => {
+  const tr = e.target.closest('tr'); const f = e.target.getAttribute('data-f');
+  if (!tr || !f) return;
+  const row = S.rows.find((r) => String(r.uid) === tr.dataset.uid);
+  if (row) { row[f] = e.target.value; refreshLine(false); }
+});
+$('rowsBody').addEventListener('change', (e) => {
+  const tr = e.target.closest('tr'); const f = e.target.getAttribute('data-f');
+  if (!tr || !f) return;
+  const row = S.rows.find((r) => String(r.uid) === tr.dataset.uid);
+  if (row) { row[f] = e.target.value; refreshLine(false); }
+});
+$('rowsBody').onclick = (e) => {
+  const id = e.target.getAttribute('data-del-row');
+  if (id) { S.rows = S.rows.filter((r) => String(r.uid) !== id); renderRows(); refreshLine(false); }
+};
+$('btnAddRow').onclick = () => { S.rows.push({ uid: S.uid++, target: '', courier: 'Other', cod: 'None', saved: false }); renderRows(); refreshLine(false); };
+$('btnResetRows').onclick = () => {
+  if (S.rows.some((r) => !r.saved) && !confirm('มีรายการที่ยังไม่ได้บันทึก ต้องการล้างทั้งหมดหรือไม่?')) return;
+  S.rows = []; S.lineEdited = false; renderRows(); refreshLine(true);
+};
+
+$('btnSave').onclick = async () => {
+  const todo = S.rows.filter((r) => !r.saved && String(r.target).trim());
+  if (!todo.length) { toast(S.rows.some((r) => !r.saved) ? 'กรุณาระบุห้อง/ชื่อก่อนบันทึก' : 'ไม่มีรายการใหม่ให้บันทึก', 'warn'); return; }
+  const data = await run('กำลังบันทึก...', () => api('save_parcels', { parcels: todo.map((r) => ({ clientId: r.uid, target: r.target, courier: r.courier, cod: r.cod })) }));
+  if (!data) return;
+  const map = {}; data.parcels.forEach((p) => { map[String(p.clientId)] = p; });
+  S.rows.forEach((r) => { const p = map[String(r.uid)]; if (p) { r.saved = true; r.courier = p.courier; r.cod = p.cod; r.target = p.target; } });
+  S.parcels = S.parcels.concat(data.parcels);
+  renderRows(); refreshLine(false);
+  toast('บันทึก ' + data.saved + ' รายการเข้าคลังแล้ว ✓');
+};
+
+/* --- จัดกลุ่มข้อความ LINE --- */
+function groupParcels(list) {
+  const m = new Map();
+  list.forEach((p) => {
+    const t = String(p.target || '').trim().replace(/\s+/g, ' ');
+    if (!t) return;
+    const k = normKey(t);
+    if (!m.has(k)) m.set(k, { target: t, items: [] });
+    m.get(k).items.push(p);
+  });
+  return Array.from(m.values());
+}
+function buildLineText(list) {
+  const groups = groupParcels(list);
+  const lines = groups.map((g) => {
+    const cnt = {}; g.items.forEach((p) => { cnt[p.courier || 'Other'] = (cnt[p.courier || 'Other'] || 0) + 1; });
+    const couriers = Object.keys(cnt).map((c) => c + (cnt[c] > 1 ? ' x' + cnt[c] : '')).join(', ');
+    const cod = g.items.reduce((s, p) => s + codNum(p.cod), 0);
+    return '• ' + g.target + ' : ' + g.items.length + ' ชิ้น (' + couriers + ')' + (cod > 0 ? ' | COD ' + cod.toLocaleString('th-TH') + ' บาท' : '');
+  });
+  if (!lines.length) return '';
+  return [applyTpl(S.dorm ? S.dorm.tplHeader : ''), '', lines.join('\n'), '', applyTpl(S.dorm ? S.dorm.tplFooter : '')].join('\n').trim();
+}
+function refreshLine(force) {
+  if (force) S.lineEdited = false;
+  if (S.lineEdited) return;
+  $('lineText').value = buildLineText(S.rows);
+}
+$('lineText').addEventListener('input', () => { S.lineEdited = true; });
+$('btnRegen').onclick = () => { S.lineEdited = false; refreshLine(true); };
+$('btnLineOpen').onclick = () => openLine($('lineText').value);
+$('btnLineCopy').onclick = () => copyText($('lineText').value);
+
+/* ============================================================
+ *  TAB 2 — คลัง & ตกค้าง
+ * ============================================================ */
+async function loadParcels(silent) {
+  if (!S.token) return;
+  const fn = async () => { const d = await api('list_parcels'); S.parcels = d.parcels || []; renderStock(); renderStats(); return d; };
+  if (silent) { try { await fn(); } catch (e) { toast(e.message, 'error'); } }
+  else await run('กำลังโหลดข้อมูล...', fn);
+}
+function pendingList() {
+  return S.parcels.filter((p) => p.status === 'pending').sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+}
+function levelOf(days) { return days >= 7 ? 'crit' : days >= 3 ? 'old' : 'new'; }
+
+function renderStock() {
+  const list = pendingList();
+  $('pendCount').textContent = list.length;
+  let cn = 0, co = 0, cc = 0;
+  $('stockBody').innerHTML = list.map((p) => {
+    const d = daysSince(p.createdAt); const lv = levelOf(d);
+    if (lv === 'new') cn++; else if (lv === 'old') co++; else cc++;
+    const badge = lv === 'crit' ? '<span class="px-2 py-0.5 rounded-full text-xs bg-red-600 text-white">วิกฤต</span>'
+      : lv === 'old' ? '<span class="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">ค้างนาน</span>'
+      : '<span class="px-2 py-0.5 rounded-full text-xs bg-green-600 text-white">เข้าใหม่</span>';
+    return '<tr class="row-' + lv + '"><td><input type="checkbox" data-sel="' + esc(p.id) + '"' + (S.selected[p.id] ? ' checked' : '') + '></td>' +
+      '<td class="font-semibold">' + esc(p.target) + '</td><td>' + esc(p.courier) + '</td>' +
+      '<td>' + (p.cod && p.cod !== 'None' ? esc(p.cod) : '-') + '</td><td class="text-xs">' + fmtDate(p.createdAt) + '</td>' +
+      '<td class="font-semibold">' + d + ' วัน</td><td>' + badge + '</td>' +
+      '<td><button data-recv="' + esc(p.id) + '" class="btn btn-green !py-1 !px-2 !text-xs">รับแล้ว</button></td></tr>';
+  }).join('');
+  $('cNew').textContent = cn; $('cOld').textContent = co; $('cCrit').textContent = cc;
+  $('stockEmpty').classList.toggle('hidden', list.length > 0);
+  $('chkAll').checked = false;
+}
+$('stockBody').onclick = async (e) => {
+  const rid = e.target.getAttribute('data-recv');
+  if (rid) { await receive([rid]); return; }
+  const sid = e.target.getAttribute('data-sel');
+  if (sid) { if (e.target.checked) S.selected[sid] = true; else delete S.selected[sid]; }
+};
+$('chkAll').onchange = (e) => {
+  S.selected = {};
+  if (e.target.checked) pendingList().forEach((p) => { S.selected[p.id] = true; });
+  document.querySelectorAll('[data-sel]').forEach((c) => { c.checked = e.target.checked; });
+};
+async function receive(ids) {
+  const d = await run('กำลังอัปเดต...', () => api('mark_received', { ids: ids }));
+  if (!d) return;
+  const now = d.receivedAt || new Date().toISOString();
+  S.parcels.forEach((p) => { if (ids.indexOf(p.id) > -1) { p.status = 'received'; p.receivedAt = now; } });
+  ids.forEach((id) => delete S.selected[id]);
+  renderStock(); renderStats();
+  toast('อัปเดตเป็น "รับแล้ว" ' + d.updated + ' รายการ ✓');
+}
+$('btnReceiveSel').onclick = () => {
+  const ids = Object.keys(S.selected);
+  if (!ids.length) { toast('เลือกพัสดุที่ต้องการก่อน (ติ๊กช่องด้านซ้าย)', 'warn'); return; }
+  receive(ids);
+};
+$('btnReload').onclick = () => loadParcels(false);
+
+function openLineModal(title, text) {
+  $('lmTitle').textContent = title; $('lmText').value = text; $('lineModal').classList.remove('hidden');
+}
+$('lmClose').onclick = () => $('lineModal').classList.add('hidden');
+$('lmCopy').onclick = () => copyText($('lmText').value);
+$('lmOpen').onclick = () => openLine($('lmText').value);
+
+$('btnRemind').onclick = () => {
+  const overdue = pendingList().filter((p) => daysSince(p.createdAt) >= 3);
+  if (!overdue.length) { toast('ไม่มีพัสดุค้างเกิน 3 วัน 🎉', 'warn'); return; }
+  const groups = groupParcels(overdue).map((g) => {
+    const maxDays = Math.max.apply(null, g.items.map((p) => daysSince(p.createdAt)));
+    const cod = g.items.reduce((s, p) => s + codNum(p.cod), 0);
+    return { text: '• ' + g.target + ' : ' + g.items.length + ' ชิ้น (ค้างนานสุด ' + maxDays + ' วัน)' + (cod > 0 ? ' | COD ' + cod.toLocaleString('th-TH') + ' บาท' : ''), maxDays: maxDays };
+  }).sort((a, b) => b.maxDays - a.maxDays);
+  const text = ['⚠️ แจ้งเตือนพัสดุตกค้าง — ' + S.dorm.dormName, 'ประจำวันที่ ' + todayTh(), '', groups.map((g) => g.text).join('\n'), '', 'กรุณามารับพัสดุโดยเร็วที่สุด หากไม่สะดวกโปรดแจ้งเจ้าหน้าที่ 🙏'].join('\n');
+  openLineModal('ทวงพัสดุค้างเกิน 3 วัน (' + overdue.length + ' ชิ้น)', text);
+};
+
+$('btnClearAll').onclick = async () => {
+  if (!confirm('ลบข้อมูลพัสดุ "ทั้งหมด" ของหอพักนี้ (ทั้งค้างรับและรับแล้ว)?\nไม่สามารถกู้คืนได้')) return;
+  const word = prompt('พิมพ์คำว่า  ลบทั้งหมด  เพื่อยืนยัน');
+  if (word === null) return;
+  if (word.trim() !== 'ลบทั้งหมด') { toast('ยกเลิก: พิมพ์ยืนยันไม่ตรง', 'warn'); return; }
+  const d = await run('กำลังลบข้อมูล...', () => api('clear_all_parcels'));
+  if (d) { S.parcels = []; S.selected = {}; renderStock(); renderStats(); toast('ลบข้อมูลแล้ว ' + d.removed + ' รายการ'); }
+};
+
+/* ============================================================
+ *  TAB 3 — สถิติ
+ * ============================================================ */
+function monthKey(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function statData() {
+  const m = $('monthPick').value;
+  const q = normKey($('statSearch').value);
+  const list = S.parcels.filter((p) => (!m || monthKey(p.createdAt) === m) && (!q || normKey(p.target).indexOf(q) > -1));
+  const map = new Map();
+  list.forEach((p) => {
+    const k = normKey(p.target); if (!k) return;
+    if (!map.has(k)) map.set(k, { target: p.target, count: 0, cod: 0, last: p.createdAt });
+    const g = map.get(k); g.count++; g.cod += codNum(p.cod);
+    if (new Date(p.createdAt) > new Date(g.last)) g.last = p.createdAt;
+  });
+  const rooms = Array.from(map.values()).sort((a, b) => b.count - a.count || String(a.target).localeCompare(String(b.target), 'th'));
+  return { list: list, rooms: rooms };
+}
+function renderStats() {
+  const { list, rooms } = statData();
+  const total = list.length;
+  $('sTotal').textContent = total;
+  $('sRooms').textContent = rooms.length;
+  $('sAvg').textContent = rooms.length ? (total / rooms.length).toFixed(2) : '0';
+  let perDay = 0;
+  const m = $('monthPick').value;
+  if (m && total) {
+    const [y, mo] = m.split('-').map(Number);
+    const now = new Date();
+    const dim = (y === now.getFullYear() && mo === now.getMonth() + 1) ? now.getDate() : new Date(y, mo, 0).getDate();
+    perDay = total / dim;
+  }
+  $('sAvgDay').textContent = perDay ? 'วันละ ~' + perDay.toFixed(1) + ' ชิ้น' : '';
+  $('statBody').innerHTML = rooms.map((g) =>
+    '<tr><td class="font-semibold">' + esc(g.target) + '</td><td class="text-right">' + g.count + '</td><td class="text-right">' + (g.cod ? g.cod.toLocaleString('th-TH') : '-') + '</td><td class="text-xs">' + fmtDate(g.last) + '</td></tr>').join('');
+  $('statEmpty').classList.toggle('hidden', rooms.length > 0);
+}
+$('monthPick').onchange = renderStats;
+$('statSearch').oninput = renderStats;
+
+function csvCell(v) { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+$('btnCsv').onclick = () => {
+  const { list, rooms } = statData();
+  if (!list.length) { toast('ไม่มีข้อมูลให้ดาวน์โหลด', 'warn'); return; }
+  const m = $('monthPick').value || 'all';
+  const lines = [];
+  lines.push(['สรุปรายห้อง', 'เดือน ' + m].map(csvCell).join(','));
+  lines.push(['ห้อง/ชื่อ', 'จำนวน(ชิ้น)', 'COD รวม(บาท)', 'ล่าสุด'].map(csvCell).join(','));
+  rooms.forEach((g) => lines.push([g.target, g.count, g.cod, fmtDate(g.last)].map(csvCell).join(',')));
+  lines.push('');
+  lines.push(['รายการละเอียด'].map(csvCell).join(','));
+  lines.push(['วันที่เข้า', 'ห้อง/ชื่อ', 'ขนส่ง', 'COD', 'สถานะ', 'วันที่รับ'].map(csvCell).join(','));
+  list.slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach((p) =>
+    lines.push([fmtDate(p.createdAt), p.target, p.courier, p.cod, p.status === 'received' ? 'รับแล้ว' : 'ค้างรับ', p.receivedAt ? fmtDate(p.receivedAt) : ''].map(csvCell).join(',')));
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'parcel-stats-' + m + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+
+/* ============================================================
+ *  TAB 4 — ตั้งค่า & ทีมงาน
+ * ============================================================ */
+$('btnSaveTpl').onclick = async () => {
+  const d = await run('กำลังบันทึก...', () => api('save_dorm_settings', { tplHeader: $('tplHeader').value, tplFooter: $('tplFooter').value }));
+  if (d) { S.dorm = d.dorm; refreshLine(true); toast('บันทึก Template แล้ว ✓'); }
+};
+$('staffForm').onsubmit = async (ev) => {
+  ev.preventDefault();
+  const d = await run('กำลังเพิ่ม Staff...', () => api('add_staff', { username: $('stUser').value, password: $('stPass').value }));
+  if (d) { toast('เพิ่ม Staff "' + d.username + '" แล้ว ✓'); $('stUser').value = ''; $('stPass').value = ''; }
+};
+
+/* ============================================================
+ *  Boot
+ * ============================================================ */
+(async function boot() {
+  renderRows(); renderThumbs();
+  let tk = null;
+  try { tk = localStorage.getItem('spm_token'); } catch (e) {}
+  if (tk && API_URL.indexOf('PASTE_') !== 0) {
+    S.token = tk;
+    showLoading('กำลังตรวจสอบการเข้าสู่ระบบ...');
+    try {
+      const d = await api('verify_session');
+      applySession(d); hideLoading(); enterApp(); return;
+    } catch (e) { S.token = null; try { localStorage.removeItem('spm_token'); } catch (e2) {} }
+    hideLoading();
+  }
+  showAuth();
+})();
+</script>
+</body>
+</html>
