@@ -460,7 +460,7 @@ function fileToDataUrl(file) {
   return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
 }
 function compress(dataUrl, max, q) {
-  max = max || 1400; q = q || 0.82;
+  max = max || 1280; q = q || 0.72;
   return new Promise((res) => {
     const img = new Image();
     img.onload = () => {
@@ -548,6 +548,7 @@ $('camShutter').onclick = async () => {
 $('btnScan').onclick = async () => {
   if (!S.images.length) return;
   const count = S.images.length;
+  const t0 = Date.now();
   const data = await run('AI กำลังอ่านข้อมูล ' + count + ' รูป...', () => api('ai_scan_batch', { images: S.images.map((im) => im.dataUrl) }));
   if (!data) return;
   let ok = 0, bad = 0, firstErr = '';
@@ -559,6 +560,7 @@ $('btnScan').onclick = async () => {
   renderRows(); refreshLine(false);
   if (bad) toast('อ่านสำเร็จ ' + ok + ' / ' + count + ' รูป — ' + (firstErr || 'กรอกข้อมูลที่ขาดเอง'), 'warn');
   else toast('AI อ่านข้อมูลสำเร็จ ' + ok + ' รายการ ✓');
+  console.log('[scan] images=' + count + ' total=' + ((Date.now() - t0) / 1000).toFixed(1) + 's, AI(server)=' + ((data.ms || 0) / 1000).toFixed(1) + 's');
 };
 
 /* --- ตารางแก้ไขได้ --- */
