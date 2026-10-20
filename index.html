@@ -7,23 +7,42 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Smart Parcel Manager</title>
+<title>Parcelly - Smart Parcel Manager</title>
+<meta name="apple-mobile-web-app-title" content="Parcelly">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>try{var __t=localStorage.getItem('spm_theme');if(__t&&__t!=='indigo')document.documentElement.setAttribute('data-theme',__t);}catch(e){}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   html, body { font-family: 'Noto Sans Thai', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
   body { padding-bottom: env(safe-area-inset-bottom); }
-  .tab-btn.active { color: #4f46e5; }
-  .tab-btn.active .tab-dot { background: #4f46e5; }
+  :root { --c50:#eef2ff; --c100:#e0e7ff; --c200:#c7d2fe; --c300:#a5b4fc; --c500:#6366f1; --c600:#4f46e5; --c700:#4338ca; }
+  [data-theme="blue"]   { --c50:#eff6ff; --c100:#dbeafe; --c200:#bfdbfe; --c300:#93c5fd; --c500:#3b82f6; --c600:#2563eb; --c700:#1d4ed8; }
+  [data-theme="orange"] { --c50:#fff7ed; --c100:#ffedd5; --c200:#fed7aa; --c300:#fdba74; --c500:#f97316; --c600:#ea580c; --c700:#c2410c; }
+  [data-theme="pink"]   { --c50:#fdf2f8; --c100:#fce7f3; --c200:#fbcfe8; --c300:#f9a8d4; --c500:#ec4899; --c600:#db2777; --c700:#be185d; }
+  [data-theme="green"]  { --c50:#ecfdf5; --c100:#d1fae5; --c200:#a7f3d0; --c300:#6ee7b7; --c500:#10b981; --c600:#059669; --c700:#047857; }
+  [data-theme="purple"] { --c50:#faf5ff; --c100:#f3e8ff; --c200:#e9d5ff; --c300:#d8b4fe; --c500:#a855f7; --c600:#9333ea; --c700:#7e22ce; }
+  .bg-indigo-50 { background-color: var(--c50) !important; }
+  .bg-indigo-600 { background-color: var(--c600) !important; }
+  .border-indigo-300 { border-color: var(--c300) !important; }
+  .text-indigo-100 { color: var(--c100) !important; }
+  .text-indigo-600 { color: var(--c600) !important; }
+  .text-indigo-700 { color: var(--c700) !important; }
+  .swatch { width: 2.6rem; height: 2.6rem; border-radius: 9999px; border: 3px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
+  .swatch.sel { box-shadow: 0 0 0 3px var(--c600); }
+  .tab-btn.active { color: var(--c600); }
+  .tab-btn.active .tab-dot { background: var(--c600); }
   .tbl th { font-weight: 600; font-size: .75rem; color: #475569; text-align: left; padding: .5rem .5rem; background: #f1f5f9; white-space: nowrap; }
   .tbl td { padding: .35rem .5rem; border-top: 1px solid #e2e8f0; vertical-align: middle; }
   .inp { width: 100%; border: 1px solid #cbd5e1; border-radius: .5rem; padding: .45rem .6rem; font-size: .9rem; background: #fff; }
-  .inp:focus { outline: 2px solid #818cf8; border-color: #818cf8; }
+  .inp:focus { outline: 2px solid var(--c300); border-color: var(--c500); }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; border-radius: .6rem; padding: .55rem .9rem; font-weight: 600; font-size: .9rem; transition: transform .05s, opacity .2s; }
   .btn:active { transform: scale(.97); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-primary { background: #4f46e5; color: #fff; }
+  .btn-primary { background: var(--c600); color: #fff; }
   .btn-green { background: #16a34a; color: #fff; }
   .btn-line { background: #06c755; color: #fff; }
   .btn-red { background: #dc2626; color: #fff; }
@@ -216,6 +235,11 @@
         </div>
       </div>
       <div class="card">
+        <h2 class="font-bold mb-1">🎨 ธีมสี</h2>
+        <p class="text-xs text-slate-500 mb-2">จำค่าไว้ในเครื่องนี้ (แต่ละคน/แต่ละเครื่องเลือกสีของตัวเองได้)</p>
+        <div id="themePicker" class="flex flex-wrap gap-3"></div>
+      </div>
+      <div class="card">
         <h2 class="font-bold mb-2">🏠 หอพักของฉัน</h2>
         <div id="dormList" class="space-y-2"></div>
         <form id="dormForm" class="owner-only mt-3 flex flex-col sm:flex-row gap-2">
@@ -368,24 +392,44 @@ function openLine(text) {
  *  PWA (manifest สร้างจาก JS + service worker ถ้ามีไฟล์ sw.js)
  * ============================================================ */
 (function initPwa() {
-  try {
-    const icon = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#4f46e5"/><text x="256" y="350" font-size="280" text-anchor="middle">📦</text></svg>');
-    const manifest = {
-      name: 'Smart Parcel Manager', short_name: 'Parcel', display: 'standalone', orientation: 'portrait',
-      start_url: location.href.split('#')[0], scope: location.href.split('#')[0].replace(/[^/]*$/, ''),
-      background_color: '#f1f5f9', theme_color: '#4f46e5',
-      icons: [{ src: icon, sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }]
-    };
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
-    document.head.appendChild(link);
-    const apple = document.createElement('link'); apple.rel = 'apple-touch-icon'; apple.href = icon; document.head.appendChild(apple);
-  } catch (e) { /* ignore */ }
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 })();
+
+/* ============================================================
+ *  ธีมสี (เก็บใน localStorage ของเครื่อง)
+ * ============================================================ */
+const THEMES = [
+  { id: 'indigo', name: 'คราม', c: '#4f46e5' },
+  { id: 'blue', name: 'ฟ้า', c: '#2563eb' },
+  { id: 'orange', name: 'ส้ม', c: '#ea580c' },
+  { id: 'pink', name: 'ชมพู', c: '#db2777' },
+  { id: 'green', name: 'เขียว', c: '#059669' },
+  { id: 'purple', name: 'ม่วง', c: '#9333ea' }
+];
+function currentTheme() {
+  let t = 'indigo';
+  try { t = localStorage.getItem('spm_theme') || 'indigo'; } catch (e) {}
+  return THEMES.some((x) => x.id === t) ? t : 'indigo';
+}
+function applyTheme(id, save) {
+  const th = THEMES.find((x) => x.id === id) || THEMES[0];
+  if (th.id === 'indigo') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', th.id);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', th.c);
+  if (save) { try { localStorage.setItem('spm_theme', th.id); } catch (e) {} }
+  const box = document.getElementById('themePicker');
+  if (box) box.innerHTML = THEMES.map((x) =>
+    '<button type="button" data-theme-pick="' + x.id + '" class="flex flex-col items-center gap-1 text-xs text-slate-600">' +
+    '<span class="swatch' + (x.id === th.id ? ' sel' : '') + '" style="background:' + x.c + '"></span>' + x.name + '</button>').join('');
+}
+document.getElementById('themePicker').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-theme-pick]');
+  if (b) { applyTheme(b.getAttribute('data-theme-pick'), true); toast('เปลี่ยนธีมสีแล้ว'); }
+});
+applyTheme(currentTheme(), false);
 
 /* ============================================================
  *  Auth
