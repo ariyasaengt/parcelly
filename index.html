@@ -326,7 +326,7 @@ function toast(msg, type) {
   t.className = 'fixed top-3 left-1/2 -translate-x-1/2 z-[110] max-w-[92vw] px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium text-white ' +
     (type === 'error' ? 'bg-red-600' : type === 'warn' ? 'bg-amber-500' : 'bg-slate-800');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.add('hidden'), type === 'error' ? 5000 : 2600);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), (type === 'error' || type === 'warn') ? 8000 : 2600);
 }
 function showLoading(msg) { $('loadingMsg').textContent = msg || 'กำลังทำงาน...'; $('loading').classList.remove('hidden'); }
 function hideLoading() { $('loading').classList.add('hidden'); }
@@ -602,35 +602,37 @@ $('camShutter').onclick = async () => {
 /* --- สั่ง AI อ่านพร้อมกัน --- */
 $('btnScan').onclick = async () => {
   if (!S.images.length) return;
-  const imgs = S.images.map((im) => im.dataUrl);
+  const imgs = S.images.slice();
   const count = imgs.length;
-  const CHUNK = 3;                       // แบ่งเป็นชุดละ 3 รูป ยิงพร้อมกันทุกชุด (แต่ละชุดยังยิง Gemini ขนานในตัวเอง)
+  const CHUNK = 3;                       // แบ่งเป็นชุดละ 3 รูป ยิงพร้อมกันทุกชุด
   const chunks = [];
   for (let i = 0; i < count; i += CHUNK) chunks.push(imgs.slice(i, i + CHUNK));
   const t0 = Date.now();
-  let done = 0, ok = 0, bad = 0, firstErr = '';
-  const addRow = (r) => {
-    if (r && r.ok) { ok++; S.rows.push({ uid: S.uid++, target: r.target || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }); }
-    else { bad++; if (!firstErr) firstErr = (r && r.error) || ''; S.rows.push({ uid: S.uid++, target: '', courier: 'Other', cod: 'None', saved: false }); }
-  };
+  let done = 0, ok = 0, firstErr = '';
+  const failed = [];                     // รูปที่ AI อ่านไม่สำเร็จ: เก็บไว้ให้กดอ่านใหม่ ไม่ทิ้ง
   showLoading('AI กำลังอ่านข้อมูล 0/' + count + ' รูป...');
   await Promise.all(chunks.map(async (c) => {
     try {
-      const d = await api('ai_scan_batch', { images: c });
-      d.results.forEach(addRow);
+      const d = await api('ai_scan_batch', { images: c.map((im) => im.dataUrl) });
+      c.forEach((im, j) => {
+        const r = d.results && d.results[j];
+        if (r && r.ok) { ok++; S.rows.push({ uid: S.uid++, target: r.target || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }); }
+        else { failed.push(im); if (!firstErr) firstErr = (r && r.error) || 'AI ไม่ตอบกลับ'; }
+      });
     } catch (e) {
-      c.forEach(() => addRow({ ok: false, error: e.message }));
+      c.forEach((im) => failed.push(im));
+      if (!firstErr) firstErr = e.message;
     }
     done += c.length;
     $('loadingMsg').textContent = 'AI กำลังอ่านข้อมูล ' + done + '/' + count + ' รูป...';
-    renderRows(); refreshLine(false);     // แสดงผลทีละชุดที่เสร็จ
+    renderRows(); refreshLine(false);
   }));
   hideLoading();
-  S.images = []; renderThumbs();
+  S.images = failed; renderThumbs();
   renderRows(); refreshLine(false);
-  if (bad) toast('อ่านสำเร็จ ' + ok + ' / ' + count + ' รูป — ' + (firstErr || 'กรอกข้อมูลที่ขาดเอง'), 'warn');
+  if (failed.length) toast('อ่านสำเร็จ ' + ok + '/' + count + ' รูป — เหลือ ' + failed.length + ' รูปที่ยังอ่านไม่ได้ (เก็บไว้ให้กดอ่านใหม่) : ' + firstErr, 'warn');
   else toast('AI อ่านข้อมูลสำเร็จ ' + ok + ' รายการ ✓ (' + ((Date.now() - t0) / 1000).toFixed(1) + ' วินาที)');
-  console.log('[scan] images=' + count + ' chunks=' + chunks.length + ' total=' + ((Date.now() - t0) / 1000).toFixed(1) + 's');
+  console.log('[scan] images=' + count + ' ok=' + ok + ' failed=' + failed.length + ' total=' + ((Date.now() - t0) / 1000).toFixed(1) + 's');
 };
 
 /* --- ตารางแก้ไขได้ --- */
