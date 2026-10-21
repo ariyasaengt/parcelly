@@ -134,7 +134,7 @@
           <button id="btnScan" class="btn btn-green" disabled><i data-i="sparkles"></i> ให้ AI อ่านข้อมูล (<span id="imgCount">0</span> รูป)</button>
           <button id="btnClearImgs" class="btn btn-ghost">ล้างรูป</button>
         </div>
-        <p class="text-xs text-slate-500 mt-2">รูปทั้งหมดจะถูกส่งในคำขอเดียว แล้วให้ AI อ่านพร้อมกันแบบขนาน</p>
+        <p class="text-xs text-slate-500 mt-2">ระบบรวมรูปทีละ 5 รูปส่งให้ AI (ประหยัดโควตา) อ่านเก็บไว้ก่อนจนครบทุกรูป แล้วสรุปผลให้ในครั้งเดียว</p>
       </div>
 
       <div class="card">
@@ -296,6 +296,15 @@
     <button id="camCancel" class="text-white text-sm px-3 py-2">ปิด</button>
     <button id="camShutter" class="w-16 h-16 rounded-full bg-white border-4 border-slate-400 active:scale-90 transition"></button>
     <button id="camDone" class="bg-green-500 text-white font-semibold rounded-xl px-4 py-2">เสร็จสิ้น</button>
+  </div>
+</div>
+
+<!-- Scan summary modal -->
+<div id="scanModal" class="hidden fixed inset-0 z-[85] bg-slate-900/60 flex items-end sm:items-center justify-center p-3">
+  <div class="bg-white rounded-2xl w-full max-w-md p-4 max-h-[85vh] overflow-y-auto">
+    <h3 class="font-bold text-lg"><i data-i="circle-check" class="text-indigo-600"></i> สรุปผลการอ่าน</h3>
+    <div id="scanSummary" class="mt-2 text-sm space-y-2"></div>
+    <div class="mt-3 text-right"><button id="scanOk" class="btn btn-primary">ตกลง</button></div>
   </div>
 </div>
 
@@ -624,41 +633,70 @@ $('camShutter').onclick = async () => {
 };
 
 /* --- สั่ง AI อ่านพร้อมกัน --- */
+function showScanSummary(info) {
+  const groups = new Map();
+  let noTarget = 0;
+  info.got.forEach((r) => {
+    const t = String(r.target || '').trim();
+    if (!t) { noTarget++; return; }
+    const k = normKey(t);
+    if (!groups.has(k)) groups.set(k, { t: t, n: 0 });
+    groups.get(k).n++;
+  });
+  const fo = info.got.filter((r) => String(r.building || '').trim() && !dormMatch(r.building)).length;
+  let html = '<div class="rounded-xl bg-indigo-50 p-3"><span class="text-2xl font-bold text-indigo-700">' + info.got.length + '</span> <span class="text-slate-600">จาก ' + info.count + ' รูป อ่านสำเร็จ</span>' +
+    '<div class="text-xs text-slate-500 mt-0.5">ใช้เวลา ' + info.secs + ' วินาที</div></div>';
+  if (groups.size) {
+    html += '<div><div class="font-semibold mb-1">ห้อง / ชื่อที่อ่านได้ (' + groups.size + ')</div><div class="flex flex-wrap gap-1.5">' +
+      Array.from(groups.values()).map((g) => '<span class="px-2 py-1 rounded-lg bg-slate-100 text-slate-700">' + esc(g.t) + (g.n > 1 ? ' <b>×' + g.n + '</b>' : '') + '</span>').join('') + '</div></div>';
+  }
+  if (noTarget) html += '<div class="text-amber-700 bg-amber-50 rounded-lg p-2">' + ic('triangle-alert') + ' ' + noTarget + ' รายการอ่านห้อง/ชื่อไม่ได้ ต้องกรอกเองในตาราง</div>';
+  if (fo) html += '<div class="text-red-700 bg-red-50 rounded-lg p-2">' + ic('triangle-alert') + ' ' + fo + ' รายการอาจไม่ใช่หอพักของคุณ (แถวสีแดงในตาราง)</div>';
+  if (info.failedCount) html += '<div class="text-red-700 bg-red-50 rounded-lg p-2">' + ic('x') + ' อ่านไม่สำเร็จ ' + info.failedCount + ' รูป — เก็บไว้ในรายการรูปแล้ว กดอ่านใหม่ได้<div class="text-xs mt-1 break-words">' + esc(info.firstErr) + '</div></div>';
+  $('scanSummary').innerHTML = html;
+  $('scanModal').classList.remove('hidden');
+}
+$('scanOk').onclick = () => $('scanModal').classList.add('hidden');
+
 $('btnScan').onclick = async () => {
   if (!S.images.length) return;
   const imgs = S.images.slice();
   const count = imgs.length;
-  const CHUNK = 3;                       // แบ่งเป็นชุดละ 3 รูป ยิงพร้อมกันทุกชุด
+  const CHUNK = 5, CONC = 3;              // ส่งทีละ 5 รูป/คำขอ, พร้อมกันไม่เกิน 3 คำขอ
   const chunks = [];
-  for (let i = 0; i < count; i += CHUNK) chunks.push(imgs.slice(i, i + CHUNK));
+  for (let i = 0; i < count; i += CHUNK) chunks.push({ start: i, items: imgs.slice(i, i + CHUNK) });
   const t0 = Date.now();
-  let done = 0, ok = 0, firstErr = '';
-  const failed = [];                     // รูปที่ AI อ่านไม่สำเร็จ: เก็บไว้ให้กดอ่านใหม่ ไม่ทิ้ง
+  const results = new Array(count);       // กองผลลัพธ์ไว้ตามลำดับรูป ยังไม่แตะตารางจนกว่าจะอ่านครบ
+  let done = 0, next = 0;
   showLoading('AI กำลังอ่านข้อมูล 0/' + count + ' รูป...');
-  await Promise.all(chunks.map(async (c) => {
-    try {
-      const d = await api('ai_scan_batch', { images: c.map((im) => im.dataUrl) });
-      c.forEach((im, j) => {
-        const r = d.results && d.results[j];
-        if (r && r.ok) { ok++; S.rows.push({ uid: S.uid++, target: r.target || '', building: r.building || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }); }
-        else { failed.push(im); if (!firstErr) firstErr = (r && r.error) || 'AI ไม่ตอบกลับ'; }
-      });
-    } catch (e) {
-      c.forEach((im) => failed.push(im));
-      if (!firstErr) firstErr = e.message;
+  const worker = async () => {
+    while (next < chunks.length) {
+      const c = chunks[next++];
+      try {
+        const d = await api('ai_scan_batch', { images: c.items.map((im) => im.dataUrl) });
+        c.items.forEach((im, j) => { results[c.start + j] = (d.results && d.results[j]) || { ok: false, error: 'AI ไม่ตอบกลับ' }; });
+      } catch (e) {
+        c.items.forEach((im, j) => { results[c.start + j] = { ok: false, error: e.message }; });
+      }
+      done += c.items.length;
+      $('loadingMsg').textContent = 'AI กำลังอ่านข้อมูล ' + done + '/' + count + ' รูป...';
     }
-    done += c.length;
-    $('loadingMsg').textContent = 'AI กำลังอ่านข้อมูล ' + done + '/' + count + ' รูป...';
-    renderRows(); refreshLine(false);
-  }));
+  };
+  await Promise.all(Array.from({ length: Math.min(CONC, chunks.length) }, worker));
   hideLoading();
+  const got = [], failed = [];
+  let firstErr = '';
+  imgs.forEach((im, i) => {
+    const r = results[i];
+    if (r && r.ok) got.push(r);
+    else { failed.push(im); if (!firstErr) firstErr = (r && r.error) || 'AI ไม่ตอบกลับ'; }
+  });
+  got.forEach((r) => S.rows.push({ uid: S.uid++, target: r.target || '', building: r.building || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }));
   S.images = failed; renderThumbs();
   renderRows(); refreshLine(false);
-  if (failed.length) toast('อ่านสำเร็จ ' + ok + '/' + count + ' รูป — เหลือ ' + failed.length + ' รูปที่ยังอ่านไม่ได้ (เก็บไว้ให้กดอ่านใหม่) : ' + firstErr, 'warn');
-  else toast('AI อ่านข้อมูลสำเร็จ ' + ok + ' รายการ (' + ((Date.now() - t0) / 1000).toFixed(1) + ' วินาที)');
-  const fc = S.rows.filter(isForeign).length;
-  if (fc) setTimeout(() => toast('พบ ' + fc + ' รายการที่อาจไม่ใช่หอพักของคุณ ดูแถวสีแดงในตาราง', 'warn'), 2800);
-  console.log('[scan] images=' + count + ' ok=' + ok + ' failed=' + failed.length + ' total=' + ((Date.now() - t0) / 1000).toFixed(1) + 's');
+  const secs = ((Date.now() - t0) / 1000).toFixed(1);
+  showScanSummary({ count: count, got: got, failedCount: failed.length, firstErr: firstErr, secs: secs });
+  console.log('[scan] images=' + count + ' ok=' + got.length + ' failed=' + failed.length + ' requests=' + chunks.length + ' total=' + secs + 's');
 };
 
 /* --- ตารางแก้ไขได้ --- */
