@@ -141,9 +141,16 @@
             <button id="btnSave" class="btn btn-primary">💾 บันทึกเข้าคลัง</button>
           </div>
         </div>
+        <div id="foreignBanner" class="hidden mb-2 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+          <div>⚠️ พบ <b id="foreignCount">0</b> รายการที่ชื่อหอ/คอนโดบนพัสดุ <b>ไม่ตรงกับหอพักของคุณ</b> (แถวสีแดง) — อาจเป็นของหอพักอื่น และจะไม่ถูกรวมในข้อความ LINE</div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button id="btnDelForeign" class="btn btn-red !py-1.5">🗑️ ลบรายการที่ไม่ใช่หอนี้ทั้งหมด</button>
+            <span class="text-xs text-red-600 self-center">หรือกด "เป็นของหอเรา" ที่แถวนั้นถ้าอ่านผิด</span>
+          </div>
+        </div>
         <div class="overflow-x-auto rounded-lg border border-slate-200">
-          <table class="tbl w-full min-w-[520px]">
-            <thead><tr><th class="w-8">#</th><th>ห้อง / ชื่อ</th><th class="w-28">ขนส่ง</th><th class="w-28">COD (บาท)</th><th class="w-14"></th></tr></thead>
+          <table class="tbl w-full min-w-[760px]">
+            <thead><tr><th class="w-8">#</th><th>ห้อง / ชื่อ</th><th class="w-44">หอ/คอนโดบนพัสดุ</th><th class="w-28">ขนส่ง</th><th class="w-24">COD (บาท)</th><th class="w-14"></th></tr></thead>
             <tbody id="rowsBody"></tbody>
           </table>
         </div>
@@ -229,6 +236,9 @@
         <textarea id="tplHeader" rows="3" class="inp mt-1"></textarea>
         <label class="text-xs font-semibold text-slate-600 mt-2 block">Footer</label>
         <textarea id="tplFooter" rows="3" class="inp mt-1"></textarea>
+        <label class="text-xs font-semibold text-slate-600 mt-2 block">คำที่ใช้ตรวจชื่อหอบนพัสดุ (คั่นด้วย , )</label>
+        <input id="tplAliases" class="inp mt-1" placeholder="เช่น KP, เคพี, เค.พี. เฮ้าส์">
+        <p class="text-xs text-slate-500 mt-1">AI จะอ่านชื่อหอ/คอนโดจากที่อยู่ผู้รับ แล้วเทียบกับชื่อหอของคุณ + คำเหล่านี้ ถ้าไม่ตรงจะเตือนว่า "ไม่ใช่หอพักของคุณ" ใส่ชื่อเล่น/คำที่เขียนต่างกันของหอคุณไว้เพื่อลดการเตือนผิด</p>
         <div class="mt-2 flex items-center gap-2">
           <button id="btnSaveTpl" class="btn btn-primary owner-only">💾 บันทึก Template</button>
           <span id="tplHint" class="text-xs text-slate-400 hidden">เฉพาะเจ้าของหอพักเท่านั้นที่แก้ไขได้</span>
@@ -461,7 +471,8 @@ function enterApp() {
   $('tplHint').classList.toggle('hidden', isOwner);
   $('tplHeader').value = S.dorm.tplHeader || '';
   $('tplFooter').value = S.dorm.tplFooter || '';
-  $('tplHeader').disabled = !isOwner; $('tplFooter').disabled = !isOwner;
+  $('tplAliases').value = S.dorm.aliases || '';
+  $('tplHeader').disabled = !isOwner; $('tplFooter').disabled = !isOwner; $('tplAliases').disabled = !isOwner;
   $('monthPick').value = new Date().toISOString().slice(0, 7);
   const d = new Date(); $('monthPick').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
   switchTab('scan');
@@ -616,7 +627,7 @@ $('btnScan').onclick = async () => {
       const d = await api('ai_scan_batch', { images: c.map((im) => im.dataUrl) });
       c.forEach((im, j) => {
         const r = d.results && d.results[j];
-        if (r && r.ok) { ok++; S.rows.push({ uid: S.uid++, target: r.target || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }); }
+        if (r && r.ok) { ok++; S.rows.push({ uid: S.uid++, target: r.target || '', building: r.building || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }); }
         else { failed.push(im); if (!firstErr) firstErr = (r && r.error) || 'AI ไม่ตอบกลับ'; }
       });
     } catch (e) {
@@ -632,23 +643,50 @@ $('btnScan').onclick = async () => {
   renderRows(); refreshLine(false);
   if (failed.length) toast('อ่านสำเร็จ ' + ok + '/' + count + ' รูป — เหลือ ' + failed.length + ' รูปที่ยังอ่านไม่ได้ (เก็บไว้ให้กดอ่านใหม่) : ' + firstErr, 'warn');
   else toast('AI อ่านข้อมูลสำเร็จ ' + ok + ' รายการ ✓ (' + ((Date.now() - t0) / 1000).toFixed(1) + ' วินาที)');
+  const fc = S.rows.filter(isForeign).length;
+  if (fc) setTimeout(() => toast('⚠️ พบ ' + fc + ' รายการที่อาจไม่ใช่หอพักของคุณ ดูแถวสีแดงในตาราง', 'warn'), 2800);
   console.log('[scan] images=' + count + ' ok=' + ok + ' failed=' + failed.length + ' total=' + ((Date.now() - t0) / 1000).toFixed(1) + 's');
 };
 
 /* --- ตารางแก้ไขได้ --- */
+const GENERIC_WORDS = ['อพาร์ตเมนต์','อพาร์ทเม้นท์','อพาร์ทเมนท์','อพาร์ตเม้นท์','คอนโดมิเนียม','condominium','apartment','residence','dormitory','mansion','หอพัก','อาคาร','คอนโด','condo','dorm','หอ'];
+function normName(s) {
+  let t = String(s || '').toLowerCase();
+  GENERIC_WORDS.forEach((w) => { t = t.split(w).join(''); });
+  return t.replace(/[\s\-_.,()\/\\'"“”]/g, '');
+}
+function dormTokens() {
+  if (!S.dorm) return [];
+  return [S.dorm.dormName].concat(String(S.dorm.aliases || '').split(/[,\n]/)).map(normName).filter((x) => x.length >= 2);
+}
+/** true = ชื่อหอบนพัสดุตรงกับหอเรา (หรืออ่านไม่ได้/ไม่มี จึงไม่เตือน) */
+function dormMatch(building) {
+  const b = normName(building);
+  if (b.length < 2) return true;
+  return dormTokens().some((t) => b.indexOf(t) > -1 || t.indexOf(b) > -1);
+}
+function isForeign(r) { return !r.saved && !r.ours && !!String(r.building || '').trim() && !dormMatch(r.building); }
+
 function renderRows() {
   $('rowCount').textContent = S.rows.length;
+  const fc = S.rows.filter(isForeign).length;
+  $('foreignBanner').classList.toggle('hidden', fc === 0);
+  $('foreignCount').textContent = fc;
   if (!S.rows.length) {
-    $('rowsBody').innerHTML = '<tr><td colspan="5" class="text-center text-slate-400 py-6 text-sm">ยังไม่มีรายการ — สแกนรูป หรือกด "เพิ่มแถว"</td></tr>';
+    $('rowsBody').innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 py-6 text-sm">ยังไม่มีรายการ — สแกนรูป หรือกด "เพิ่มแถว"</td></tr>';
     return;
   }
-  $('rowsBody').innerHTML = S.rows.map((r, i) =>
-    '<tr data-uid="' + r.uid + '" class="' + (r.saved ? 'bg-green-50' : '') + '">' +
+  $('rowsBody').innerHTML = S.rows.map((r, i) => {
+    const fo = isForeign(r);
+    return '<tr data-uid="' + r.uid + '" class="' + (r.saved ? 'bg-green-50' : fo ? 'bg-red-50' : '') + '">' +
     '<td class="text-xs text-slate-400">' + (i + 1) + '</td>' +
     '<td><input class="inp" data-f="target" value="' + esc(r.target) + '" placeholder="ห้อง/ชื่อ"></td>' +
+    '<td><input class="inp' + (fo ? ' !border-red-400' : '') + '" data-f="building" value="' + esc(r.building || '') + '" placeholder="(ไม่พบชื่อหอ)">' +
+    (fo ? '<div class="text-xs text-red-600 mt-0.5">⚠️ ไม่ใช่หอพักของคุณ? <button data-ours="' + r.uid + '" class="underline font-semibold">เป็นของหอเรา</button></div>' : '') + '</td>' +
     '<td><select class="inp" data-f="courier">' + COURIERS.map((c) => '<option' + (c === r.courier ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></td>' +
     '<td><input class="inp" data-f="cod" inputmode="decimal" value="' + esc(r.cod) + '"></td>' +
-    '<td class="text-center">' + (r.saved ? '<span class="text-green-600 text-xs">✓</span> ' : '') + '<button data-del-row="' + r.uid + '" class="text-red-600 text-lg">🗑</button></td></tr>').join('');
+    '<td class="text-center">' + (r.saved ? '<span class="text-green-600 text-xs">✓</span> ' : '') + '<button data-del-row="' + r.uid + '" class="text-red-600 text-lg">🗑</button></td></tr>';
+  }).join('');
 }
 $('rowsBody').addEventListener('input', (e) => {
   const tr = e.target.closest('tr'); const f = e.target.getAttribute('data-f');
@@ -660,11 +698,25 @@ $('rowsBody').addEventListener('change', (e) => {
   const tr = e.target.closest('tr'); const f = e.target.getAttribute('data-f');
   if (!tr || !f) return;
   const row = S.rows.find((r) => String(r.uid) === tr.dataset.uid);
-  if (row) { row[f] = e.target.value; refreshLine(false); }
+  if (!row) return;
+  row[f] = e.target.value;
+  if (f === 'building') row.ours = false;
+  if (f === 'building') renderRows();
+  refreshLine(false);
 });
 $('rowsBody').onclick = (e) => {
-  const id = e.target.getAttribute('data-del-row');
-  if (id) { S.rows = S.rows.filter((r) => String(r.uid) !== id); renderRows(); refreshLine(false); }
+  const del = e.target.getAttribute('data-del-row');
+  if (del) { S.rows = S.rows.filter((r) => String(r.uid) !== del); renderRows(); refreshLine(false); return; }
+  const ours = e.target.getAttribute('data-ours');
+  if (ours) { const row = S.rows.find((r) => String(r.uid) === ours); if (row) { row.ours = true; renderRows(); refreshLine(false); } }
+};
+$('btnDelForeign').onclick = () => {
+  const n = S.rows.filter(isForeign).length;
+  if (!n) return;
+  if (!confirm('ลบ ' + n + ' รายการที่ไม่ใช่หอพักของคุณออกจากรายการ?')) return;
+  S.rows = S.rows.filter((r) => !isForeign(r));
+  renderRows(); refreshLine(false);
+  toast('ลบ ' + n + ' รายการแล้ว');
 };
 $('btnAddRow').onclick = () => { S.rows.push({ uid: S.uid++, target: '', courier: 'Other', cod: 'None', saved: false }); renderRows(); refreshLine(false); };
 $('btnResetRows').onclick = () => {
@@ -675,6 +727,8 @@ $('btnResetRows').onclick = () => {
 $('btnSave').onclick = async () => {
   const todo = S.rows.filter((r) => !r.saved && String(r.target).trim());
   if (!todo.length) { toast(S.rows.some((r) => !r.saved) ? 'กรุณาระบุห้อง/ชื่อก่อนบันทึก' : 'ไม่มีรายการใหม่ให้บันทึก', 'warn'); return; }
+  const fo = todo.filter(isForeign).length;
+  if (fo && !confirm('มี ' + fo + ' รายการที่อาจไม่ใช่หอพักของคุณ (แถวสีแดง)\nต้องการบันทึกเข้าคลังด้วยหรือไม่?\n\nกด ยกเลิก เพื่อกลับไปลบ/ตรวจสอบก่อน')) return;
   const data = await run('กำลังบันทึก...', () => api('save_parcels', { parcels: todo.map((r) => ({ clientId: r.uid, target: r.target, courier: r.courier, cod: r.cod })) }));
   if (!data) return;
   const map = {}; data.parcels.forEach((p) => { map[String(p.clientId)] = p; });
@@ -710,7 +764,7 @@ function buildLineText(list) {
 function refreshLine(force) {
   if (force) S.lineEdited = false;
   if (S.lineEdited) return;
-  $('lineText').value = buildLineText(S.rows);
+  $('lineText').value = buildLineText(S.rows.filter((r) => !isForeign(r)));
 }
 $('lineText').addEventListener('input', () => { S.lineEdited = true; });
 $('btnRegen').onclick = () => { S.lineEdited = false; refreshLine(true); };
@@ -876,8 +930,8 @@ $('btnCsv').onclick = () => {
  *  TAB 4 — ตั้งค่า & ทีมงาน
  * ============================================================ */
 $('btnSaveTpl').onclick = async () => {
-  const d = await run('กำลังบันทึก...', () => api('save_dorm_settings', { tplHeader: $('tplHeader').value, tplFooter: $('tplFooter').value }));
-  if (d) { S.dorm = d.dorm; refreshLine(true); toast('บันทึก Template แล้ว ✓'); }
+  const d = await run('กำลังบันทึก...', () => api('save_dorm_settings', { tplHeader: $('tplHeader').value, tplFooter: $('tplFooter').value, aliases: $('tplAliases').value }));
+  if (d) { S.dorm = d.dorm; renderRows(); refreshLine(true); toast('บันทึกการตั้งค่าแล้ว ✓'); }
 };
 $('staffForm').onsubmit = async (ev) => {
   ev.preventDefault();
