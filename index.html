@@ -1,1051 +1,741 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4f46e5">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Parcelly - Smart Parcel Manager</title>
-<meta name="apple-mobile-web-app-title" content="Parcelly">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>try{var __t=localStorage.getItem('spm_theme');if(__t&&__t!=='indigo')document.documentElement.setAttribute('data-theme',__t);}catch(e){}</script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  html, body { font-family: 'Noto Sans Thai', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
-  body { padding-bottom: env(safe-area-inset-bottom); }
-  :root { --c50:#eef2ff; --c100:#e0e7ff; --c200:#c7d2fe; --c300:#a5b4fc; --c500:#6366f1; --c600:#4f46e5; --c700:#4338ca; }
-  [data-theme="blue"]   { --c50:#eff6ff; --c100:#dbeafe; --c200:#bfdbfe; --c300:#93c5fd; --c500:#3b82f6; --c600:#2563eb; --c700:#1d4ed8; }
-  [data-theme="orange"] { --c50:#fff7ed; --c100:#ffedd5; --c200:#fed7aa; --c300:#fdba74; --c500:#f97316; --c600:#ea580c; --c700:#c2410c; }
-  [data-theme="pink"]   { --c50:#fdf2f8; --c100:#fce7f3; --c200:#fbcfe8; --c300:#f9a8d4; --c500:#ec4899; --c600:#db2777; --c700:#be185d; }
-  [data-theme="green"]  { --c50:#ecfdf5; --c100:#d1fae5; --c200:#a7f3d0; --c300:#6ee7b7; --c500:#10b981; --c600:#059669; --c700:#047857; }
-  [data-theme="purple"] { --c50:#faf5ff; --c100:#f3e8ff; --c200:#e9d5ff; --c300:#d8b4fe; --c500:#a855f7; --c600:#9333ea; --c700:#7e22ce; }
-  .bg-indigo-50 { background-color: var(--c50) !important; }
-  .bg-indigo-600 { background-color: var(--c600) !important; }
-  .border-indigo-300 { border-color: var(--c300) !important; }
-  .text-indigo-100 { color: var(--c100) !important; }
-  .text-indigo-600 { color: var(--c600) !important; }
-  .text-indigo-700 { color: var(--c700) !important; }
-  .swatch { width: 2.6rem; height: 2.6rem; border-radius: 9999px; border: 3px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
-  .swatch.sel { box-shadow: 0 0 0 3px var(--c600); }
-  .tab-btn.active { color: var(--c600); }
-  .tab-btn.active .tab-dot { background: var(--c600); }
-  .tbl th { font-weight: 600; font-size: .75rem; color: #475569; text-align: left; padding: .5rem .5rem; background: #f1f5f9; white-space: nowrap; }
-  .tbl td { padding: .35rem .5rem; border-top: 1px solid #e2e8f0; vertical-align: middle; }
-  .inp { width: 100%; border: 1px solid #cbd5e1; border-radius: .5rem; padding: .45rem .6rem; font-size: .9rem; background: #fff; }
-  .inp:focus { outline: 2px solid var(--c300); border-color: var(--c500); }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; border-radius: .6rem; padding: .55rem .9rem; font-weight: 600; font-size: .9rem; transition: transform .05s, opacity .2s; }
-  .btn:active { transform: scale(.97); }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-primary { background: var(--c600); color: #fff; }
-  .btn-green { background: #16a34a; color: #fff; }
-  .btn-line { background: #06c755; color: #fff; }
-  .btn-red { background: #dc2626; color: #fff; }
-  .btn-amber { background: #f59e0b; color: #fff; }
-  .btn-ghost { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
-  .card { background: #fff; border-radius: 1rem; box-shadow: 0 1px 3px rgba(15,23,42,.08); padding: 1rem; }
-  #hDormSel option { color: #1e293b; }
-  .ic { width: 1.15em; height: 1.15em; display: inline-block; vertical-align: -0.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; pointer-events: none; }
-  .ic.ic-lg { width: 1.5rem; height: 1.5rem; margin-bottom: 2px; }
-  .ic.ic-xl { width: 2.2rem; height: 2.2rem; }
-  .ic.ic-sm { width: .8rem; height: .8rem; }
-  .flash { animation: flash .25s ease-out; }
-  @keyframes flash { from { opacity: .2; } to { opacity: 1; } }
-  .row-new { background: #f0fdf4; }
-  .row-old { background: #fffbeb; }
-  .row-crit { background: #fef2f2; }
-</style>
-</head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
+/**
+ * ============================================================
+ *  Smart Parcel Manager — Backend (Google Apps Script)
+ * ============================================================
+ *  วิธีติดตั้ง
+ *  1) สร้าง Google Sheet ใหม่ แล้วไปที่ Extensions > Apps Script วางโค้ดนี้
+ *     (หรือสร้างสคริปต์แบบ standalone แล้วตั้ง Script Property ชื่อ SHEET_ID)
+ *  2) Project Settings > Script Properties > เพิ่ม
+ *        GEMINI_API_KEY = <API Key ของคุณ>
+ *  3) Deploy > New deployment > Web app
+ *        Execute as: Me   |   Who has access: Anyone
+ *  4) คัดลอก Web app URL ไปใส่ใน index.html (ตัวแปร API_URL)
+ *
+ *  หมายเหตุ: ระบบสร้างชีต _SYSTEM_USERS / _SYSTEM_DORMS และชีตพัสดุของแต่ละหอให้อัตโนมัติ
+ * ============================================================
+ */
 
-<!-- Loading overlay -->
-<div id="loading" class="hidden fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center">
-  <div class="bg-white rounded-2xl px-6 py-5 flex items-center gap-3 shadow-xl">
-    <svg class="animate-spin h-6 w-6 text-indigo-600" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
-    <span id="loadingMsg" class="font-medium">กำลังทำงาน...</span>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="toast" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-[110] max-w-[92vw] px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium text-white"></div>
-
-<!-- ======================= AUTH ======================= -->
-<section id="authView" class="hidden min-h-screen flex items-center justify-center p-4">
-  <div class="w-full max-w-md">
-    <div class="text-center mb-5">
-      <div class="mx-auto mb-3 w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg" style="background:linear-gradient(135deg,var(--c500),var(--c700))"><i data-i="package" class="ic-xl"></i></div>
-      <h1 class="text-2xl font-bold text-indigo-700">Smart Parcel Manager</h1>
-      <p class="text-slate-500 text-sm">ระบบจัดการพัสดุหอพักด้วย AI</p>
-    </div>
-    <div class="card">
-      <div class="grid grid-cols-2 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
-        <button id="tabLogin" class="py-2 rounded-lg font-semibold text-sm bg-white shadow">เข้าสู่ระบบ</button>
-        <button id="tabRegister" class="py-2 rounded-lg font-semibold text-sm text-slate-500">สร้างหอพักใหม่</button>
-      </div>
-      <form id="loginForm" class="space-y-3">
-        <div><label class="text-xs font-semibold text-slate-600">Username</label><input id="lUser" class="inp mt-1" autocomplete="username" required></div>
-        <div><label class="text-xs font-semibold text-slate-600">รหัสผ่าน</label><input id="lPass" type="password" class="inp mt-1" autocomplete="current-password" required></div>
-        <button class="btn btn-primary w-full">เข้าสู่ระบบ</button>
-      </form>
-      <form id="registerForm" class="space-y-3 hidden">
-        <div><label class="text-xs font-semibold text-slate-600">ชื่อหอพัก</label><input id="rDorm" class="inp mt-1" required></div>
-        <div><label class="text-xs font-semibold text-slate-600">Username แอดมิน (3-40 ตัว ไม่มีเว้นวรรค)</label><input id="rUser" class="inp mt-1" autocomplete="username" required></div>
-        <div><label class="text-xs font-semibold text-slate-600">รหัสผ่านแอดมิน (อย่างน้อย 6 ตัว)</label><input id="rPass" type="password" class="inp mt-1" autocomplete="new-password" required></div>
-        <div><label class="text-xs font-semibold text-slate-600">ยืนยันรหัสผ่าน</label><input id="rPass2" type="password" class="inp mt-1" autocomplete="new-password" required></div>
-        <button class="btn btn-green w-full">สร้างหอพัก</button>
-      </form>
-      <p id="apiWarn" class="hidden mt-3 text-xs text-red-600 bg-red-50 rounded-lg p-2"><i data-i="triangle-alert"></i> ยังไม่ได้ตั้งค่า API_URL ในไฟล์ index.html</p>
-    </div>
-  </div>
-</section>
-
-<!-- ======================= APP ======================= -->
-<div id="appView" class="hidden">
-  <header class="sticky top-0 z-30 bg-indigo-600 text-white shadow">
-    <div class="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between">
-      <div class="min-w-0">
-        <div id="hDorm" class="font-bold truncate">หอพัก</div>
-        <select id="hDormSel" class="hidden max-w-full text-sm font-bold bg-white/15 text-white rounded-lg px-2 py-1 outline-none"></select>
-        <div id="hUser" class="text-xs text-indigo-100 truncate"></div>
-      </div>
-      <button id="btnLogout" class="text-xs bg-white/15 hover:bg-white/25 rounded-lg px-3 py-1.5"><i data-i="log-out"></i> ออกจากระบบ</button>
-    </div>
-  </header>
-
-  <main class="max-w-5xl mx-auto px-3 pt-3 pb-28">
-
-    <!-- TAB 1: SCAN -->
-    <section id="tab-scan" class="space-y-3">
-      <div class="card">
-        <h2 class="font-bold mb-2"><i data-i="camera"></i> ถ่าย / อัปโหลดรูปพัสดุ</h2>
-        <div class="flex flex-wrap gap-2">
-          <button id="btnCam" class="btn btn-primary"><i data-i="camera"></i> เปิดกล้อง</button>
-          <button id="btnPick" class="btn btn-ghost"><i data-i="image"></i> อัปโหลดจากอัลบั้ม</button>
-          <input id="fileInput" type="file" accept="image/*" multiple class="hidden">
-          <input id="camInput" type="file" accept="image/*" capture="environment" class="hidden">
-        </div>
-        <div id="thumbs" class="flex gap-2 overflow-x-auto mt-3 pb-1"></div>
-        <div class="mt-3 flex flex-wrap items-center gap-2">
-          <button id="btnScan" class="btn btn-green" disabled><i data-i="sparkles"></i> ให้ AI อ่านข้อมูล (<span id="imgCount">0</span> รูป)</button>
-          <button id="btnClearImgs" class="btn btn-ghost">ล้างรูป</button>
-        </div>
-        <p class="text-xs text-slate-500 mt-2">ระบบรวมรูปทีละ 5 รูปส่งให้ AI (ประหยัดโควตา) อ่านเก็บไว้ก่อนจนครบทุกรูป แล้วสรุปผลให้ในครั้งเดียว</p>
-      </div>
-
-      <div class="card">
-        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
-          <h2 class="font-bold"><i data-i="clipboard-list"></i> รายการพัสดุที่อ่านได้ (<span id="rowCount">0</span>)</h2>
-          <div class="flex gap-2">
-            <button id="btnAddRow" class="btn btn-ghost"><i data-i="plus"></i> เพิ่มแถว</button>
-            <button id="btnSave" class="btn btn-primary"><i data-i="save"></i> บันทึกเข้าคลัง</button>
-          </div>
-        </div>
-        <div id="foreignBanner" class="hidden mb-2 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-          <div><i data-i="triangle-alert"></i> พบ <b id="foreignCount">0</b> รายการที่ชื่อหอ/คอนโดบนพัสดุ <b>ไม่ตรงกับหอพักของคุณ</b> (แถวสีแดง) — อาจเป็นของหอพักอื่น และจะไม่ถูกรวมในข้อความ LINE</div>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <button id="btnDelForeign" class="btn btn-red !py-1.5"><i data-i="trash-2"></i> ลบรายการที่ไม่ใช่หอนี้ทั้งหมด</button>
-            <span class="text-xs text-red-600 self-center">หรือกด "เป็นของหอเรา" ที่แถวนั้นถ้าอ่านผิด</span>
-          </div>
-        </div>
-        <div class="overflow-x-auto rounded-lg border border-slate-200">
-          <table class="tbl w-full min-w-[760px]">
-            <thead><tr><th class="w-8">#</th><th>ห้อง / ชื่อ</th><th class="w-44">หอ/คอนโดบนพัสดุ</th><th class="w-28">ขนส่ง</th><th class="w-24">COD (บาท)</th><th class="w-14"></th></tr></thead>
-            <tbody id="rowsBody"></tbody>
-          </table>
-        </div>
-        <div class="mt-2"><button id="btnResetRows" class="text-xs text-slate-500 underline">เริ่มรอบใหม่ (ล้างรายการทั้งหมด)</button></div>
-      </div>
-
-      <div class="card">
-        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
-          <h2 class="font-bold"><i data-i="message-circle"></i> ข้อความแจ้งเตือนทาง LINE</h2>
-          <button id="btnRegen" class="text-xs text-indigo-600 underline">สร้างข้อความใหม่</button>
-        </div>
-        <textarea id="lineText" rows="9" class="inp font-mono text-sm" placeholder="ข้อความจะถูกสร้างอัตโนมัติ โดยรวมพัสดุที่ชื่อ/ห้องเดียวกันไว้ด้วยกัน"></textarea>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <button id="btnLineOpen" class="btn btn-line"><i data-i="send"></i> เปิดแอป LINE</button>
-          <button id="btnLineCopy" class="btn btn-ghost"><i data-i="copy"></i> คัดลอก</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 2: INVENTORY -->
-    <section id="tab-stock" class="hidden space-y-3">
-      <div class="card">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <h2 class="font-bold"><i data-i="archive"></i> พัสดุค้างรับ (<span id="pendCount">0</span>)</h2>
-          <div class="flex flex-wrap gap-2">
-            <button id="btnReceiveSel" class="btn btn-green"><i data-i="check-check"></i> รับแล้ว (ที่เลือก)</button>
-            <button id="btnRemind" class="btn btn-line">ทวงของค้าง LINE</button>
-            <button id="btnReload" class="btn btn-ghost"><i data-i="refresh-cw"></i></button>
-            <button id="btnClearAll" class="btn btn-red owner-only"><i data-i="trash-2"></i> ล้างทั้งหมด</button>
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-2 mt-3 text-xs">
-          <span class="px-2 py-1 rounded-full bg-green-100 text-green-700">เข้าใหม่ (0-2 วัน): <b id="cNew">0</b></span>
-          <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700">ค้างนาน (3-6 วัน): <b id="cOld">0</b></span>
-          <span class="px-2 py-1 rounded-full bg-red-100 text-red-700">วิกฤต (7+ วัน): <b id="cCrit">0</b></span>
-        </div>
-      </div>
-      <div class="card p-0 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="tbl w-full min-w-[640px]">
-            <thead><tr>
-              <th class="w-8"><input type="checkbox" id="chkAll"></th><th>ห้อง / ชื่อ</th><th>ขนส่ง</th><th>COD</th><th>วันที่เข้า</th><th>ค้าง</th><th>สถานะ</th><th></th>
-            </tr></thead>
-            <tbody id="stockBody"></tbody>
-          </table>
-        </div>
-        <div id="stockEmpty" class="hidden text-center text-slate-400 py-8 text-sm"><i data-i="circle-check"></i> ไม่มีพัสดุค้างรับ</div>
-      </div>
-    </section>
-
-    <!-- TAB 3: STATS -->
-    <section id="tab-stats" class="hidden space-y-3">
-      <div class="card">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <div><label class="text-xs font-semibold text-slate-600">เดือน</label><input id="monthPick" type="month" class="inp mt-1"></div>
-          <div class="sm:col-span-2"><label class="text-xs font-semibold text-slate-600">ค้นหา ชื่อ / ห้อง</label><input id="statSearch" class="inp mt-1" placeholder="เช่น 302 หรือ สมชาย"></div>
-        </div>
-        <div class="grid grid-cols-3 gap-2 mt-3 text-center">
-          <div class="bg-indigo-50 rounded-xl p-3"><div class="text-xs text-indigo-600">พัสดุรวม</div><div id="sTotal" class="text-2xl font-bold text-indigo-700">0</div></div>
-          <div class="bg-emerald-50 rounded-xl p-3"><div class="text-xs text-emerald-600">จำนวนห้องที่ได้รับ</div><div id="sRooms" class="text-2xl font-bold text-emerald-700">0</div></div>
-          <div class="bg-amber-50 rounded-xl p-3"><div class="text-xs text-amber-600">เฉลี่ยต่อห้อง</div><div id="sAvg" class="text-2xl font-bold text-amber-700">0</div><div id="sAvgDay" class="text-[11px] text-amber-600"></div></div>
-        </div>
-        <div class="mt-3"><button id="btnCsv" class="btn btn-ghost"><i data-i="download"></i> ดาวน์โหลด Excel/CSV</button></div>
-      </div>
-      <div class="card p-0 overflow-hidden">
-        <div class="px-4 pt-3 font-bold">ยอดสะสมรายห้อง</div>
-        <div class="overflow-x-auto mt-2">
-          <table class="tbl w-full min-w-[480px]">
-            <thead><tr><th>ห้อง / ชื่อ</th><th class="text-right">จำนวน (ชิ้น)</th><th class="text-right">COD รวม (บาท)</th><th>ล่าสุด</th></tr></thead>
-            <tbody id="statBody"></tbody>
-          </table>
-        </div>
-        <div id="statEmpty" class="hidden text-center text-slate-400 py-8 text-sm">ไม่มีข้อมูลในเดือนที่เลือก</div>
-      </div>
-    </section>
-
-    <!-- TAB 4: SETTINGS -->
-    <section id="tab-settings" class="hidden space-y-3">
-      <div class="card">
-        <h2 class="font-bold mb-1"><i data-i="pencil"></i> Template ข้อความ LINE</h2>
-        <p class="text-xs text-slate-500 mb-2">ใช้ตัวแปร <code>{dormName}</code> และ <code>{date}</code> ได้ในข้อความ</p>
-        <label class="text-xs font-semibold text-slate-600">Header</label>
-        <textarea id="tplHeader" rows="3" class="inp mt-1"></textarea>
-        <label class="text-xs font-semibold text-slate-600 mt-2 block">Footer</label>
-        <textarea id="tplFooter" rows="3" class="inp mt-1"></textarea>
-        <label class="text-xs font-semibold text-slate-600 mt-2 block">คำที่ใช้ตรวจชื่อหอบนพัสดุ (คั่นด้วย , )</label>
-        <input id="tplAliases" class="inp mt-1" placeholder="เช่น KP, เคพี, เค.พี. เฮ้าส์">
-        <p class="text-xs text-slate-500 mt-1">AI จะอ่านชื่อหอ/คอนโดจากที่อยู่ผู้รับ แล้วเทียบกับชื่อหอของคุณ + คำเหล่านี้ ถ้าไม่ตรงจะเตือนว่า "ไม่ใช่หอพักของคุณ" ใส่ชื่อเล่น/คำที่เขียนต่างกันของหอคุณไว้เพื่อลดการเตือนผิด</p>
-        <div class="mt-2 flex items-center gap-2">
-          <button id="btnSaveTpl" class="btn btn-primary owner-only"><i data-i="save"></i> บันทึก Template</button>
-          <span id="tplHint" class="text-xs text-slate-400 hidden">เฉพาะเจ้าของหอพักเท่านั้นที่แก้ไขได้</span>
-        </div>
-      </div>
-      <div class="card">
-        <h2 class="font-bold mb-1"><i data-i="palette"></i> ธีมสี</h2>
-        <p class="text-xs text-slate-500 mb-2">จำค่าไว้ในเครื่องนี้ (แต่ละคน/แต่ละเครื่องเลือกสีของตัวเองได้)</p>
-        <div id="themePicker" class="flex flex-wrap gap-3"></div>
-      </div>
-      <div class="card">
-        <h2 class="font-bold mb-2"><i data-i="house"></i> หอพักของฉัน</h2>
-        <div id="dormList" class="space-y-2"></div>
-        <form id="dormForm" class="owner-only mt-3 flex flex-col sm:flex-row gap-2">
-          <input id="cdName" class="inp" placeholder="ชื่อหอพักใหม่ (ใช้บัญชีเดิม)" required>
-          <button class="btn btn-green shrink-0"><i data-i="plus"></i> เพิ่มหอพัก</button>
-        </form>
-      </div>
-      <div class="card owner-only">
-        <h2 class="font-bold mb-2"><i data-i="users"></i> เพิ่มบัญชี Staff</h2>
-        <form id="staffForm" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <input id="stUser" class="inp" placeholder="Username (3-40 ตัว)" autocomplete="off" required>
-          <input id="stPass" type="password" class="inp" placeholder="รหัสผ่าน (6+ ตัว)" autocomplete="new-password" required>
-          <button class="btn btn-green">เพิ่ม Staff</button>
-        </form>
-        <p class="text-xs text-slate-500 mt-2">Staff เข้าสู่ระบบด้วย Username/รหัสผ่านของตัวเอง (Username ต้องไม่ซ้ำกับใครในระบบ) จัดการพัสดุได้ แต่ตั้งค่า/ล้างข้อมูล/เพิ่มทีมไม่ได้</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- Bottom nav -->
-  <nav class="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200" style="padding-bottom: env(safe-area-inset-bottom)">
-    <div class="max-w-5xl mx-auto grid grid-cols-4">
-      <button class="tab-btn active py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="scan"><i data-i="camera" class="ic-lg"></i>สแกน</button>
-      <button class="tab-btn py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="stock"><i data-i="archive" class="ic-lg"></i>คลัง</button>
-      <button class="tab-btn py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="stats"><i data-i="chart-column" class="ic-lg"></i>สถิติ</button>
-      <button class="tab-btn py-2 text-slate-500 flex flex-col items-center text-xs" data-tab="settings"><i data-i="settings" class="ic-lg"></i>ตั้งค่า</button>
-    </div>
-  </nav>
-</div>
-
-<!-- Camera modal -->
-<div id="camModal" class="hidden fixed inset-0 z-[90] bg-black flex flex-col">
-  <div class="flex-1 relative min-h-0">
-    <video id="camVideo" class="absolute inset-0 w-full h-full object-contain bg-black" autoplay playsinline muted></video>
-    <div id="camFlash" class="absolute inset-0 bg-white opacity-0 pointer-events-none"></div>
-    <div class="absolute top-3 left-3 bg-black/60 text-white text-sm rounded-full px-3 py-1">ถ่ายแล้ว <b id="camCount">0</b> รูป</div>
-  </div>
-  <div id="camStrip" class="flex gap-2 overflow-x-auto px-3 py-2 bg-black/80 min-h-[56px]"></div>
-  <div class="bg-black px-6 py-4 flex items-center justify-between" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))">
-    <button id="camCancel" class="text-white text-sm px-3 py-2">ปิด</button>
-    <button id="camShutter" class="w-16 h-16 rounded-full bg-white border-4 border-slate-400 active:scale-90 transition"></button>
-    <button id="camDone" class="bg-green-500 text-white font-semibold rounded-xl px-4 py-2">เสร็จสิ้น</button>
-  </div>
-</div>
-
-<!-- Scan summary modal -->
-<div id="scanModal" class="hidden fixed inset-0 z-[85] bg-slate-900/60 flex items-end sm:items-center justify-center p-3">
-  <div class="bg-white rounded-2xl w-full max-w-md p-4 max-h-[85vh] overflow-y-auto">
-    <h3 class="font-bold text-lg"><i data-i="circle-check" class="text-indigo-600"></i> สรุปผลการอ่าน</h3>
-    <div id="scanSummary" class="mt-2 text-sm space-y-2"></div>
-    <div class="mt-3 text-right"><button id="scanOk" class="btn btn-primary">ตกลง</button></div>
-  </div>
-</div>
-
-<!-- Generic LINE modal -->
-<div id="lineModal" class="hidden fixed inset-0 z-[80] bg-slate-900/60 flex items-end sm:items-center justify-center p-3">
-  <div class="bg-white rounded-2xl w-full max-w-lg p-4">
-    <h3 id="lmTitle" class="font-bold mb-2">ข้อความ LINE</h3>
-    <textarea id="lmText" rows="12" class="inp font-mono text-sm"></textarea>
-    <div class="mt-3 flex flex-wrap gap-2 justify-end">
-      <button id="lmClose" class="btn btn-ghost">ปิด</button>
-      <button id="lmCopy" class="btn btn-ghost"><i data-i="copy"></i> คัดลอก</button>
-      <button id="lmOpen" class="btn btn-line"><i data-i="send"></i> เปิดแอป LINE</button>
-    </div>
-  </div>
-</div>
-
-<script>
-/* ============================================================
- *  ตั้งค่า: ใส่ Web app URL ที่ได้จากการ Deploy Apps Script
- * ============================================================ */
-const API_URL = 'https://script.google.com/macros/s/AKfycbz-y6LW1eyRWf3Y-Lrr9mazUcbd_htbPNQMoHYBBc3anaMlykIBwcPMXuGUoYaFQ8bD/exec';
-
-/* ============================================================
- *  State & helpers
- * ============================================================ */
-const ICONS = {"package": "<path d=\"M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z\"/><path d=\"M12 22V12\"/><polyline points=\"3.29 7 12 12 20.71 7\"/><path d=\"m7.5 4.27 9 5.15\"/>", "camera": "<path d=\"M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z\"/><circle cx=\"12\" cy=\"13\" r=\"3\"/>", "image": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" ry=\"2\"/><circle cx=\"9\" cy=\"9\" r=\"2\"/><path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\"/>", "sparkles": "<path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\"/><path d=\"M20 3v4\"/><path d=\"M22 5h-4\"/><path d=\"M4 17v2\"/><path d=\"M5 18H3\"/>", "clipboard-list": "<rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\" ry=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4\"/><path d=\"M12 16h4\"/><path d=\"M8 11h.01\"/><path d=\"M8 16h.01\"/>", "copy": "<rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\"/><path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/>", "plus": "<path d=\"M5 12h14\"/><path d=\"M12 5v14\"/>", "save": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "trash-2": "<path d=\"M3 6h18\"/><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\"/><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\"/><line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\"/><line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\"/>", "message-circle": "<path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/>", "archive": "<rect width=\"20\" height=\"5\" x=\"2\" y=\"3\" rx=\"1\"/><path d=\"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8\"/><path d=\"M10 12h4\"/>", "check-check": "<path d=\"M18 6 7 17l-5-5\"/><path d=\"m22 10-7.5 7.5L13 16\"/>", "refresh-cw": "<path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M8 16H3v5\"/>", "download": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/>", "pencil": "<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\"/><path d=\"m15 5 4 4\"/>", "palette": "<circle cx=\"13.5\" cy=\"6.5\" r=\".5\" fill=\"currentColor\"/><circle cx=\"17.5\" cy=\"10.5\" r=\".5\" fill=\"currentColor\"/><circle cx=\"8.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"/><circle cx=\"6.5\" cy=\"12.5\" r=\".5\" fill=\"currentColor\"/><path d=\"M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z\"/>", "house": "<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "chart-column": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "settings": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "check": "<path d=\"M20 6 9 17l-5-5\"/>", "triangle-alert": "<path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/>", "log-out": "<path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"/><polyline points=\"16 17 21 12 16 7\"/><line x1=\"21\" x2=\"9\" y1=\"12\" y2=\"12\"/>", "send": "<path d=\"M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z\"/><path d=\"m21.854 2.147-10.94 10.939\"/>", "x": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>", "circle-check": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/>"};
-function ic(name, cls) {
-  return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
-}
-function hydrateIcons(root) {
-  (root || document).querySelectorAll('i[data-i]').forEach((el) => { el.outerHTML = ic(el.getAttribute('data-i'), el.className); });
-}
-hydrateIcons();
-
-const COURIERS = ['Flash', 'SPX', 'J&T', 'KEX', 'EMS', 'Other'];
-const S = {
-  token: null, user: null, dorm: null, dorms: [],
-  images: [],          // [{id, dataUrl}]
-  rows: [],            // [{uid, target, courier, cod, saved}]
-  parcels: [],         // จากเซิร์ฟเวอร์
-  tab: 'scan', stream: null, lineEdited: false, uid: 1, selected: {}
+const CONFIG = {
+  GEMINI_MODEL: 'gemini-3.1-flash-lite',        // โมเดลหลัก: โควตาฟรีสูงสุด (500 คำขอ/วัน, 15/นาที)
+  TZ: 'Asia/Bangkok',
+  SESSION_HOURS: 24 * 14,                      // อายุ token 14 วัน
+  MAX_IMAGES_PER_BATCH: 50,
+  DEFAULT_FALLBACKS: 'gemini-3.8-flash,gemini-2.5-flash-lite,gemini-2.5-flash',  // ตัวสำรองเมื่อโควตารายวันของตัวหลักเต็ม (แก้ได้ที่ Script Property GEMINI_FALLBACK_MODELS)
+  GROUP_SIZE: 5,                              // รวมกี่รูปต่อ 1 คำขอ Gemini (ประหยัดโควตา)
+  SHEET_USERS: '_SYSTEM_USERS',
+  SHEET_DORMS: '_SYSTEM_DORMS',
+  USER_HEADERS: ['username', 'password', 'role', 'dormId', 'dormName'],
+  DORM_HEADERS: ['dormId', 'dormName', 'tplHeader', 'tplFooter', 'aliases'],
+  PARCEL_HEADERS: ['id', 'createdAt', 'target', 'courier', 'cod', 'status', 'receivedAt', 'createdBy'],
+  COURIERS: ['Flash', 'SPX', 'J&T', 'KEX', 'EMS', 'Other'],
+  DEFAULT_HEADER: '📦 แจ้งพัสดุเข้าใหม่ {dormName}\nวันที่ {date}',
+  DEFAULT_FOOTER: '📍 รับพัสดุได้ที่ ออฟฟิศ ชั้น 1 (ถึง 21:30น.)'
 };
 
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* ============================================================
+ *  Entry points
+ * ============================================================ */
 
-let toastTimer = null;
-function toast(msg, type) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.className = 'fixed top-3 left-1/2 -translate-x-1/2 z-[110] max-w-[92vw] px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium text-white ' +
-    (type === 'error' ? 'bg-red-600' : type === 'warn' ? 'bg-amber-500' : 'bg-slate-800');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.add('hidden'), (type === 'error' || type === 'warn') ? 8000 : 2600);
+function doGet(e) {
+  return json_({ ok: true, service: 'Smart Parcel Manager API', model: CONFIG.GEMINI_MODEL });
 }
-function showLoading(msg) { $('loadingMsg').textContent = msg || 'กำลังทำงาน...'; $('loading').classList.remove('hidden'); }
-function hideLoading() { $('loading').classList.add('hidden'); }
 
-async function api(action, payload) {
-  if (!API_URL || API_URL.indexOf('PASTE_') === 0) throw new Error('ยังไม่ได้ตั้งค่า API_URL ใน index.html');
-  const body = Object.assign({ action: action, token: S.token }, payload || {});
-  let res;
+function doPost(e) {
+  let out;
   try {
-    res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
-  } catch (e) { throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); }
-  let data;
-  try { data = await res.json(); } catch (e) { throw new Error('เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ (ตรวจสอบการ Deploy: Who has access = Anyone)'); }
-  if (!data.ok) {
-    const err = new Error(data.error || 'เกิดข้อผิดพลาด');
-    err.code = data.code;
-    if (data.code === 'AUTH' && S.token) { doLogout(true); }
-    throw err;
+    const raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
+    const req = JSON.parse(raw);
+    const data = route_(req);
+    out = Object.assign({ ok: true }, data);
+  } catch (err) {
+    out = { ok: false, error: String((err && err.message) || err), code: (err && err.code) || 'ERROR' };
   }
-  return data;
+  return json_(out);
 }
 
-async function run(msg, fn) {
-  showLoading(msg);
-  try { return await fn(); }
-  catch (e) { toast(e.message || String(e), 'error'); return null; }
-  finally { hideLoading(); }
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
-const normKey = (s) => String(s || '').trim().replace(/\s+/g, ' ').toLowerCase();
-const fmtDate = (iso) => {
-  const d = new Date(iso);
-  if (isNaN(d)) return '-';
-  return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-};
-const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-const daysSince = (iso) => {
-  const d = new Date(iso);
-  if (isNaN(d)) return 0;
-  return Math.max(0, Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000));
-};
-const codNum = (c) => { const n = parseFloat(String(c || '').replace(/,/g, '')); return isNaN(n) ? 0 : n; };
-const todayTh = () => new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-
-function applyTpl(t) {
-  return String(t || '').replace(/\{dormName\}/g, S.dorm ? S.dorm.dormName : '').replace(/\{date\}/g, todayTh());
+function fail_(message, code) {
+  const err = new Error(message);
+  err.code = code || 'ERROR';
+  throw err;
 }
 
-async function copyText(text) {
-  try { await navigator.clipboard.writeText(text); toast('คัดลอกแล้ว'); }
-  catch (e) {
-    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('คัดลอกแล้ว'); } catch (e2) { toast('คัดลอกไม่สำเร็จ', 'error'); }
-    document.body.removeChild(ta);
+function withLock_(fn) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(25000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+
+function route_(req) {
+  const action = String(req.action || '');
+  switch (action) {
+    case 'login':              return login_(req);
+    case 'register_owner':     return withLock_(function () { return registerOwner_(req); });
+    case 'verify_session':     return verifySession_(req);
+    case 'switch_dorm':        return switchDorm_(req);
+    case 'create_dorm':        return withLock_(function () { return createDorm_(req); });
+    case 'ai_scan_batch':      return aiScanBatch_(req);
+    case 'list_parcels':       return listParcels_(req);
+    case 'save_parcels':       return withLock_(function () { return saveParcels_(req); });
+    case 'mark_received':      return withLock_(function () { return markReceived_(req); });
+    case 'clear_all_parcels':  return withLock_(function () { return clearAllParcels_(req); });
+    case 'save_dorm_settings': return withLock_(function () { return saveDormSettings_(req); });
+    case 'add_staff':          return withLock_(function () { return addStaff_(req); });
+    default: fail_('Unknown action: ' + action, 'BAD_ACTION');
   }
 }
-function openLine(text) {
-  if (!String(text || '').trim()) { toast('ไม่มีข้อความ', 'warn'); return; }
-  window.open('https://line.me/R/msg/text/?' + encodeURIComponent(text), '_blank');
-}
 
 /* ============================================================
- *  PWA (manifest สร้างจาก JS + service worker ถ้ามีไฟล์ sw.js)
+ *  Spreadsheet helpers
  * ============================================================ */
-(function initPwa() {
-  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+
+function getSS_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  if (id) return SpreadsheetApp.openById(id);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) fail_('ไม่พบ Spreadsheet: ให้สร้างสคริปต์จากชีต หรือตั้ง Script Property ชื่อ SHEET_ID', 'CONFIG');
+  return ss;
+}
+
+function getOrCreateSheet_(name, headers) {
+  const ss = getSS_();
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1, 1, sh.getMaxRows(), headers.length).setNumberFormat('@'); // เก็บเป็นข้อความทั้งหมด (กันเลขห้อง 0xxx หาย)
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
   }
-})();
-
-/* ============================================================
- *  ธีมสี (เก็บใน localStorage ของเครื่อง)
- * ============================================================ */
-const THEMES = [
-  { id: 'indigo', name: 'คราม', c: '#4f46e5' },
-  { id: 'blue', name: 'ฟ้า', c: '#2563eb' },
-  { id: 'orange', name: 'ส้ม', c: '#ea580c' },
-  { id: 'pink', name: 'ชมพู', c: '#db2777' },
-  { id: 'green', name: 'เขียว', c: '#059669' },
-  { id: 'purple', name: 'ม่วง', c: '#9333ea' }
-];
-function currentTheme() {
-  let t = 'indigo';
-  try { t = localStorage.getItem('spm_theme') || 'indigo'; } catch (e) {}
-  return THEMES.some((x) => x.id === t) ? t : 'indigo';
-}
-function applyTheme(id, save) {
-  const th = THEMES.find((x) => x.id === id) || THEMES[0];
-  if (th.id === 'indigo') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme', th.id);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', th.c);
-  if (save) { try { localStorage.setItem('spm_theme', th.id); } catch (e) {} }
-  const box = document.getElementById('themePicker');
-  if (box) box.innerHTML = THEMES.map((x) =>
-    '<button type="button" data-theme-pick="' + x.id + '" class="flex flex-col items-center gap-1 text-xs text-slate-600">' +
-    '<span class="swatch' + (x.id === th.id ? ' sel' : '') + '" style="background:' + x.c + '"></span>' + x.name + '</button>').join('');
-}
-document.getElementById('themePicker').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-theme-pick]');
-  if (b) { applyTheme(b.getAttribute('data-theme-pick'), true); toast('เปลี่ยนธีมสีแล้ว'); }
-});
-applyTheme(currentTheme(), false);
-
-/* ============================================================
- *  Auth
- * ============================================================ */
-function setAuthTab(mode) {
-  const login = mode === 'login';
-  $('loginForm').classList.toggle('hidden', !login);
-  $('registerForm').classList.toggle('hidden', login);
-  $('tabLogin').className = 'py-2 rounded-lg font-semibold text-sm ' + (login ? 'bg-white shadow' : 'text-slate-500');
-  $('tabRegister').className = 'py-2 rounded-lg font-semibold text-sm ' + (!login ? 'bg-white shadow' : 'text-slate-500');
-}
-$('tabLogin').onclick = () => setAuthTab('login');
-$('tabRegister').onclick = () => setAuthTab('register');
-
-function lastDormId() { try { return localStorage.getItem('spm_dorm') || ''; } catch (e) { return ''; } }
-function applySession(data) {
-  S.token = data.token; S.user = data.user; S.dorm = data.dorm; S.dorms = data.dorms || [];
-  try { localStorage.setItem('spm_token', S.token); localStorage.setItem('spm_dorm', S.dorm.dormId); } catch (e) {}
+  return sh;
 }
 
-function enterApp() {
-  $('authView').classList.add('hidden');
-  $('appView').classList.remove('hidden');
-  $('hDorm').textContent = S.dorm.dormName;
-  $('hUser').textContent = S.user.username + ' • ' + (S.user.role === 'owner' ? 'เจ้าของหอพัก' : 'Staff');
-  renderDormSwitch();
-  const isOwner = S.user.role === 'owner';
-  document.querySelectorAll('.owner-only').forEach((el) => el.classList.toggle('hidden', !isOwner));
-  $('tplHint').classList.toggle('hidden', isOwner);
-  $('tplHeader').value = S.dorm.tplHeader || '';
-  $('tplFooter').value = S.dorm.tplFooter || '';
-  $('tplAliases').value = S.dorm.aliases || '';
-  $('tplHeader').disabled = !isOwner; $('tplFooter').disabled = !isOwner; $('tplAliases').disabled = !isOwner;
-  $('monthPick').value = new Date().toISOString().slice(0, 7);
-  const d = new Date(); $('monthPick').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-  switchTab('scan');
-  refreshLine(true);
-  loadParcels(true);
-}
+function usersSheet_() { return getOrCreateSheet_(CONFIG.SHEET_USERS, CONFIG.USER_HEADERS); }
+function dormsSheet_() { return getOrCreateSheet_(CONFIG.SHEET_DORMS, CONFIG.DORM_HEADERS); }
+function parcelSheet_(dormId) { return getOrCreateSheet_(dormId, CONFIG.PARCEL_HEADERS); }
 
-function showAuth() {
-  $('appView').classList.add('hidden');
-  $('authView').classList.remove('hidden');
-  $('apiWarn').classList.toggle('hidden', !(API_URL.indexOf('PASTE_') === 0));
-}
-
-function doLogout(silent) {
-  S.token = null; S.user = null; S.dorm = null; S.rows = []; S.images = []; S.parcels = []; S.selected = {};
-  try { localStorage.removeItem('spm_token'); } catch (e) {}
-  renderThumbs(); renderRows();
-  showAuth();
-  if (!silent) toast('ออกจากระบบแล้ว');
-}
-$('btnLogout').onclick = () => doLogout(false);
-
-$('loginForm').onsubmit = async (ev) => {
-  ev.preventDefault();
-  const data = await run('กำลังเข้าสู่ระบบ...', () => api('login', { username: $('lUser').value, password: $('lPass').value, dormId: lastDormId() }));
-  if (data) { applySession(data); $('lPass').value = ''; enterApp(); }
-};
-$('registerForm').onsubmit = async (ev) => {
-  ev.preventDefault();
-  if ($('rPass').value !== $('rPass2').value) { toast('รหัสผ่านยืนยันไม่ตรงกัน', 'error'); return; }
-  const data = await run('กำลังสร้างหอพัก...', () => api('register_owner', { dormName: $('rDorm').value, username: $('rUser').value, password: $('rPass').value }));
-  if (data) { applySession(data); $('rPass').value = ''; $('rPass2').value = ''; enterApp(); toast('สร้างหอพักสำเร็จ'); }
-};
-
-/* ============================================================
- *  Tabs
- * ============================================================ */
-function switchTab(tab) {
-  S.tab = tab;
-  ['scan', 'stock', 'stats', 'settings'].forEach((t) => $('tab-' + t).classList.toggle('hidden', t !== tab));
-  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
-  window.scrollTo({ top: 0 });
-  if (tab === 'stock' || tab === 'stats') loadParcels(false);
-}
-document.querySelectorAll('.tab-btn').forEach((b) => { b.onclick = () => switchTab(b.dataset.tab); });
-
-/* ============================================================
- *  TAB 1 — รูปภาพ / กล้อง
- * ============================================================ */
-function fileToDataUrl(file) {
-  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
-}
-function compress(dataUrl, max, q) {
-  max = max || 1280; q = q || 0.72;
-  return new Promise((res) => {
-    const img = new Image();
-    img.onload = () => {
-      const r = Math.min(1, max / Math.max(img.width, img.height));
-      const w = Math.round(img.width * r), h = Math.round(img.height * r);
-      const c = document.createElement('canvas'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      res(c.toDataURL('image/jpeg', q));
-    };
-    img.onerror = () => res(dataUrl);
-    img.src = dataUrl;
+function readObjects_(sheet, headers) {
+  const last = sheet.getLastRow();
+  if (last < 2) return [];
+  const vals = sheet.getRange(2, 1, last - 1, headers.length).getDisplayValues();
+  return vals.map(function (row, i) {
+    const o = { _row: i + 2 };
+    headers.forEach(function (h, c) { o[h] = row[c]; });
+    return o;
   });
 }
-function addImage(dataUrl) { S.images.push({ id: S.uid++, dataUrl: dataUrl }); renderThumbs(); }
 
-function renderThumbs() {
-  $('thumbs').innerHTML = S.images.map((im) =>
-    '<div class="relative shrink-0"><img src="' + im.dataUrl + '" class="h-20 w-20 object-cover rounded-lg border border-slate-200">' +
-    '<button data-del-img="' + im.id + '" class="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center">' + ic('x', 'ic-sm') + '</button></div>').join('');
-  $('imgCount').textContent = S.images.length;
-  $('btnScan').disabled = S.images.length === 0;
+function appendRows_(sheet, rows) {
+  if (!rows.length) return;
+  const cols = rows[0].length;
+  const start = sheet.getLastRow() + 1;
+  const need = start + rows.length - 1;
+  if (need > sheet.getMaxRows()) sheet.insertRowsAfter(sheet.getMaxRows(), need - sheet.getMaxRows());
+  sheet.getRange(start, 1, rows.length, cols).setNumberFormat('@').setValues(rows);
 }
-$('thumbs').onclick = (e) => {
-  const id = e.target.getAttribute('data-del-img');
-  if (id) { S.images = S.images.filter((im) => String(im.id) !== id); renderThumbs(); }
-};
-$('btnClearImgs').onclick = () => { S.images = []; renderThumbs(); };
 
-async function handleFiles(files) {
-  if (!files || !files.length) return;
-  showLoading('กำลังเตรียมรูป...');
-  try {
-    for (const f of Array.from(files)) {
-      const raw = await fileToDataUrl(f);
-      addImage(await compress(raw));
-    }
-  } catch (e) { toast('อ่านรูปไม่สำเร็จ', 'error'); }
-  finally { hideLoading(); }
+function nowIso_() {
+  return Utilities.formatDate(new Date(), CONFIG.TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
 }
-$('btnPick').onclick = () => $('fileInput').click();
-$('fileInput').onchange = async (e) => { await handleFiles(e.target.files); e.target.value = ''; };
-$('camInput').onchange = async (e) => { await handleFiles(e.target.files); e.target.value = ''; };
 
-/* --- กล้องถ่ายต่อเนื่อง --- */
-let camShots = 0;
-async function openCamera() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('camInput').click(); return; }
-  try {
-    S.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } }, audio: false });
-  } catch (e) {
-    toast('เปิดกล้องในหน้านี้ไม่ได้ ใช้กล้องของเครื่องแทน', 'warn');
-    $('camInput').click();
-    return;
+function clean_(v) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim(); }
+function lc_(v) { return clean_(v).toLowerCase(); }
+
+/* ============================================================
+ *  Password / session token
+ * ============================================================ */
+
+function sha256Hex_(text) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8);
+  return bytes.map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('');
+}
+
+function hashPassword_(password) {
+  const salt = Utilities.getUuid().replace(/-/g, '').substring(0, 16);
+  return salt + '$' + sha256Hex_(salt + ':' + password);
+}
+
+function verifyPassword_(password, stored) {
+  const parts = String(stored || '').split('$');
+  if (parts.length !== 2) return false;
+  return sha256Hex_(parts[0] + ':' + password) === parts[1];
+}
+
+function getSecret_() {
+  const p = PropertiesService.getScriptProperties();
+  let s = p.getProperty('TOKEN_SECRET');
+  if (!s) {
+    s = Utilities.getUuid() + Utilities.getUuid();
+    p.setProperty('TOKEN_SECRET', s);
   }
-  camShots = 0; $('camCount').textContent = '0'; $('camStrip').innerHTML = '';
-  $('camVideo').srcObject = S.stream;
-  $('camModal').classList.remove('hidden');
+  return s;
 }
-function closeCamera() {
-  if (S.stream) { S.stream.getTracks().forEach((t) => t.stop()); S.stream = null; }
-  $('camVideo').srcObject = null;
-  $('camModal').classList.add('hidden');
-}
-$('btnCam').onclick = openCamera;
-$('camCancel').onclick = closeCamera;
-$('camDone').onclick = () => { const n = camShots; closeCamera(); if (n) toast('เพิ่ม ' + n + ' รูปแล้ว'); };
-$('camShutter').onclick = async () => {
-  const v = $('camVideo');
-  if (!v.videoWidth) return;
-  const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
-  c.getContext('2d').drawImage(v, 0, 0);
-  const small = await compress(c.toDataURL('image/jpeg', 0.9));
-  addImage(small);
-  camShots++;
-  $('camCount').textContent = camShots;
-  const strip = $('camStrip'); const im = document.createElement('img');
-  im.src = small; im.className = 'h-12 w-12 object-cover rounded border border-white/40 shrink-0';
-  strip.appendChild(im); strip.scrollLeft = strip.scrollWidth;
-  const f = $('camFlash'); f.style.transition = 'none'; f.style.opacity = '.7';
-  requestAnimationFrame(() => { f.style.transition = 'opacity .25s'; f.style.opacity = '0'; });
-  if (navigator.vibrate) navigator.vibrate(30);
-};
 
-/* --- สั่ง AI อ่านพร้อมกัน --- */
-function showScanSummary(info) {
-  const groups = new Map();
-  let noTarget = 0;
-  info.got.forEach((r) => {
-    const t = String(r.target || '').trim();
-    if (!t) { noTarget++; return; }
-    const k = normKey(t);
-    if (!groups.has(k)) groups.set(k, { t: t, n: 0 });
-    groups.get(k).n++;
+function makeToken_(user) {
+  const payload = JSON.stringify({
+    u: user.username, d: user.dormId,
+    exp: Date.now() + CONFIG.SESSION_HOURS * 3600 * 1000
   });
-  const fo = info.got.filter((r) => String(r.building || '').trim() && !dormMatch(r.building)).length;
-  let html = '<div class="rounded-xl bg-indigo-50 p-3"><span class="text-2xl font-bold text-indigo-700">' + info.got.length + '</span> <span class="text-slate-600">จาก ' + info.count + ' รูป อ่านสำเร็จ</span>' +
-    '<div class="text-xs text-slate-500 mt-0.5">ใช้เวลา ' + info.secs + ' วินาที</div></div>';
-  if (groups.size) {
-    html += '<div><div class="font-semibold mb-1">ห้อง / ชื่อที่อ่านได้ (' + groups.size + ')</div><div class="flex flex-wrap gap-1.5">' +
-      Array.from(groups.values()).map((g) => '<span class="px-2 py-1 rounded-lg bg-slate-100 text-slate-700">' + esc(g.t) + (g.n > 1 ? ' <b>×' + g.n + '</b>' : '') + '</span>').join('') + '</div></div>';
-  }
-  if (noTarget) html += '<div class="text-amber-700 bg-amber-50 rounded-lg p-2">' + ic('triangle-alert') + ' ' + noTarget + ' รายการอ่านห้อง/ชื่อไม่ได้ ต้องกรอกเองในตาราง</div>';
-  if (fo) html += '<div class="text-red-700 bg-red-50 rounded-lg p-2">' + ic('triangle-alert') + ' ' + fo + ' รายการอาจไม่ใช่หอพักของคุณ (แถวสีแดงในตาราง)</div>';
-  if (info.failedCount) html += '<div class="text-red-700 bg-red-50 rounded-lg p-2">' + ic('x') + ' อ่านไม่สำเร็จ ' + info.failedCount + ' รูป — เก็บไว้ในรายการรูปแล้ว กดอ่านใหม่ได้<div class="text-xs mt-1 break-words">' + esc(info.firstErr) + '</div></div>';
-  $('scanSummary').innerHTML = html;
-  $('scanModal').classList.remove('hidden');
+  const b = Utilities.base64EncodeWebSafe(payload, Utilities.Charset.UTF_8);
+  const sig = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(b, getSecret_()));
+  return b + '.' + sig;
 }
-$('scanOk').onclick = () => $('scanModal').classList.add('hidden');
 
-$('btnScan').onclick = async () => {
-  if (!S.images.length) return;
-  const imgs = S.images.slice();
-  const count = imgs.length;
-  const CHUNK = 5, CONC = 3;              // ส่งทีละ 5 รูป/คำขอ, พร้อมกันไม่เกิน 3 คำขอ
-  const chunks = [];
-  for (let i = 0; i < count; i += CHUNK) chunks.push({ start: i, items: imgs.slice(i, i + CHUNK) });
-  const t0 = Date.now();
-  const results = new Array(count);       // กองผลลัพธ์ไว้ตามลำดับรูป ยังไม่แตะตารางจนกว่าจะอ่านครบ
-  let done = 0, next = 0;
-  showLoading('AI กำลังอ่านข้อมูล 0/' + count + ' รูป...');
-  const worker = async () => {
-    while (next < chunks.length) {
-      const c = chunks[next++];
-      try {
-        const d = await api('ai_scan_batch', { images: c.items.map((im) => im.dataUrl) });
-        c.items.forEach((im, j) => { results[c.start + j] = (d.results && d.results[j]) || { ok: false, error: 'AI ไม่ตอบกลับ' }; });
-      } catch (e) {
-        c.items.forEach((im, j) => { results[c.start + j] = { ok: false, error: e.message }; });
-      }
-      done += c.items.length;
-      $('loadingMsg').textContent = 'AI กำลังอ่านข้อมูล ' + done + '/' + count + ' รูป...';
-    }
+function parseToken_(token) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 2) return null;
+  const expected = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(parts[0], getSecret_()));
+  if (expected !== parts[1]) return null;
+  try {
+    const json = Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString('UTF-8');
+    const p = JSON.parse(json);
+    if (!p.exp || p.exp < Date.now()) return null;
+    return p;
+  } catch (e) { return null; }
+}
+
+/** ตรวจ token แล้วคืน {user, dorm} — ถ้าไม่ผ่านจะ throw code AUTH */
+function authenticate_(token) {
+  const p = parseToken_(token);
+  if (!p) fail_('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'AUTH');
+  const user = readObjects_(usersSheet_(), CONFIG.USER_HEADERS).filter(function (u) {
+    return u.username === p.u && u.dormId === p.d;
+  })[0];
+  if (!user) fail_('ไม่พบบัญชีผู้ใช้', 'AUTH');
+  const dorm = readObjects_(dormsSheet_(), CONFIG.DORM_HEADERS).filter(function (d) { return d.dormId === user.dormId; })[0];
+  if (!dorm) fail_('ไม่พบข้อมูลหอพัก', 'AUTH');
+  return { user: user, dorm: dorm };
+}
+
+function requireOwner_(ctx) {
+  if (ctx.user.role !== 'owner') fail_('เฉพาะเจ้าของหอพัก (owner) เท่านั้นที่ทำรายการนี้ได้', 'FORBIDDEN');
+}
+
+function userRows_(username) {
+  return readObjects_(usersSheet_(), CONFIG.USER_HEADERS).filter(function (u) { return u.username === username; });
+}
+
+function findDorm_(dormId) {
+  return readObjects_(dormsSheet_(), CONFIG.DORM_HEADERS).filter(function (d) { return d.dormId === dormId; })[0];
+}
+
+function sessionPayload_(user, dorm, rows) {
+  const mine = rows || userRows_(user.username);
+  return {
+    token: makeToken_(user),
+    user: { username: user.username, role: user.role, dormId: user.dormId, dormName: user.dormName },
+    dorm: { dormId: dorm.dormId, dormName: dorm.dormName, tplHeader: dorm.tplHeader, tplFooter: dorm.tplFooter, aliases: dorm.aliases || '' },
+    dorms: mine.map(function (u) { return { dormId: u.dormId, dormName: u.dormName, role: u.role }; })
   };
-  await Promise.all(Array.from({ length: Math.min(CONC, chunks.length) }, worker));
-  hideLoading();
-  const got = [], failed = [];
-  let firstErr = '';
-  imgs.forEach((im, i) => {
-    const r = results[i];
-    if (r && r.ok) got.push(r);
-    else { failed.push(im); if (!firstErr) firstErr = (r && r.error) || 'AI ไม่ตอบกลับ'; }
+}
+
+/* ============================================================
+ *  Auth actions
+ * ============================================================ */
+
+function newDormId_() { return 'DORM' + Utilities.getUuid().replace(/-/g, '').substring(0, 10).toUpperCase(); }
+
+function validateDormName_(dormName) {
+  if (dormName.length < 2 || dormName.length > 60) fail_('ชื่อหอพักต้องยาว 2-60 ตัวอักษร', 'VALIDATION');
+}
+
+function createDormRows_(dormName, username, passwordHash) {
+  const dormId = newDormId_();
+  appendRows_(dormsSheet_(), [[dormId, dormName, CONFIG.DEFAULT_HEADER, CONFIG.DEFAULT_FOOTER, '']]);
+  appendRows_(usersSheet_(), [[username, passwordHash, 'owner', dormId, dormName]]);
+  parcelSheet_(dormId); // สร้างชีตพัสดุของหอนี้
+  return {
+    user: { username: username, password: passwordHash, role: 'owner', dormId: dormId, dormName: dormName },
+    dorm: { dormId: dormId, dormName: dormName, tplHeader: CONFIG.DEFAULT_HEADER, tplFooter: CONFIG.DEFAULT_FOOTER, aliases: '' }
+  };
+}
+
+function registerOwner_(req) {
+  const dormName = clean_(req.dormName);
+  const username = clean_(req.username);
+  const password = String(req.password || '');
+  validateDormName_(dormName);
+  if (!/^\S{3,40}$/.test(username)) fail_('Username ต้องยาว 3-40 ตัวอักษร และห้ามมีช่องว่าง', 'VALIDATION');
+  if (password.length < 6) fail_('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร', 'VALIDATION');
+  if (userRows_(username).length) fail_('Username นี้ถูกใช้แล้ว (ถ้าเป็นบัญชีของคุณ ให้เข้าสู่ระบบแล้วเพิ่มหอพักใหม่ในแท็บตั้งค่า)', 'DUPLICATE');
+
+  const made = createDormRows_(dormName, username, hashPassword_(password));
+  return sessionPayload_(made.user, made.dorm);
+}
+
+/** เพิ่มหอพักใหม่ให้เจ้าของที่ล็อกอินอยู่ (ใช้ Username/รหัสผ่านเดิม) */
+function createDorm_(req) {
+  const ctx = authenticate_(req.token);
+  requireOwner_(ctx);
+  const dormName = clean_(req.dormName);
+  validateDormName_(dormName);
+  const mine = userRows_(ctx.user.username);
+  if (mine.some(function (u) { return u.role === 'owner' && lc_(u.dormName) === lc_(dormName); })) fail_('คุณมีหอพักชื่อนี้อยู่แล้ว', 'DUPLICATE');
+  const made = createDormRows_(dormName, ctx.user.username, ctx.user.password);
+  return sessionPayload_(made.user, made.dorm);
+}
+
+/** สลับหอพักที่ใช้งาน (ได้เฉพาะหอพักที่บัญชีนี้มีสิทธิ์) */
+function switchDorm_(req) {
+  const ctx = authenticate_(req.token);
+  const rows = userRows_(ctx.user.username);
+  const target = rows.filter(function (u) { return u.dormId === String(req.dormId || ''); })[0];
+  if (!target) fail_('คุณไม่มีสิทธิ์เข้าหอพักนี้', 'FORBIDDEN');
+  const dorm = findDorm_(target.dormId);
+  if (!dorm) fail_('ไม่พบข้อมูลหอพัก', 'NOT_FOUND');
+  return sessionPayload_(target, dorm, rows);
+}
+
+function login_(req) {
+  const username = clean_(req.username);
+  const password = String(req.password || '');
+  if (!username || !password) fail_('กรอก Username และรหัสผ่าน', 'VALIDATION');
+
+  const rows = userRows_(username).filter(function (u) { return verifyPassword_(password, u.password); });
+  if (!rows.length) fail_('Username หรือรหัสผ่านไม่ถูกต้อง', 'LOGIN_FAILED');
+
+  // เลือกหอพักที่ใช้ล่าสุด (ถ้ามี) ไม่งั้นใช้หอแรก
+  const hint = String(req.dormId || '');
+  const user = rows.filter(function (u) { return u.dormId === hint; })[0] || rows[0];
+  const dorm = findDorm_(user.dormId);
+  if (!dorm) fail_('ไม่พบข้อมูลหอพัก', 'LOGIN_FAILED');
+  return sessionPayload_(user, dorm, rows);
+}
+
+function verifySession_(req) {
+  const ctx = authenticate_(req.token);
+  return sessionPayload_(ctx.user, ctx.dorm);
+}
+
+/* ============================================================
+ *  Parcel actions
+ * ============================================================ */
+
+function normalizeCourier_(v) {
+  const s = String(v || '').toLowerCase().trim();
+  if (!s) return 'Other';
+  if (/j\s*&\s*t|j\s*and\s*t|\bjnt\b|\bjt\b|เจแอนด์ที|เจ&ที/.test(s)) return 'J&T';
+  if (/flash|แฟลช/.test(s)) return 'Flash';
+  if (/spx|shopee|ช้อปปี้|ชอปปี้/.test(s)) return 'SPX';
+  if (/\bkex\b|kerry|เคอรี่/.test(s)) return 'KEX';
+  if (/\bems\b|thailand\s*post|ไปรษณีย์|ปณ\./.test(s)) return 'EMS';
+  return 'Other';
+}
+
+function normalizeCod_(v) {
+  const s = String(v == null ? '' : v).replace(/,/g, '').trim();
+  if (!s || /^(none|null|n\/a|na|no|-|ไม่มี)$/i.test(s)) return 'None';
+  const m = s.match(/\d+(\.\d+)?/);
+  if (!m) return 'None';
+  const n = parseFloat(m[0]);
+  if (!n) return 'None';
+  return String(n);
+}
+
+function listParcels_(req) {
+  const ctx = authenticate_(req.token);
+  const rows = readObjects_(parcelSheet_(ctx.dorm.dormId), CONFIG.PARCEL_HEADERS).map(function (r) {
+    return {
+      id: r.id, createdAt: r.createdAt, target: r.target, courier: r.courier,
+      cod: r.cod, status: r.status, receivedAt: r.receivedAt, createdBy: r.createdBy
+    };
   });
-  got.forEach((r) => S.rows.push({ uid: S.uid++, target: r.target || '', building: r.building || '', courier: r.courier || 'Other', cod: r.cod || 'None', saved: false }));
-  S.images = failed; renderThumbs();
-  renderRows(); refreshLine(false);
-  const secs = ((Date.now() - t0) / 1000).toFixed(1);
-  showScanSummary({ count: count, got: got, failedCount: failed.length, firstErr: firstErr, secs: secs });
-  console.log('[scan] images=' + count + ' ok=' + got.length + ' failed=' + failed.length + ' requests=' + chunks.length + ' total=' + secs + 's');
-};
+  return { parcels: rows };
+}
 
-/* --- ตารางแก้ไขได้ --- */
-const GENERIC_WORDS = ['อพาร์ตเมนต์','อพาร์ทเม้นท์','อพาร์ทเมนท์','อพาร์ตเม้นท์','คอนโดมิเนียม','condominium','apartment','residence','dormitory','mansion','หอพัก','อาคาร','คอนโด','condo','dorm','หอ'];
-function normName(s) {
-  let t = String(s || '').toLowerCase();
-  GENERIC_WORDS.forEach((w) => { t = t.split(w).join(''); });
-  return t.replace(/[\s\-_.,()\/\\'"“”]/g, '');
+function saveParcels_(req) {
+  const ctx = authenticate_(req.token);
+  const list = Array.isArray(req.parcels) ? req.parcels : [];
+  const now = nowIso_();
+  const out = [];
+  const rows = [];
+  list.forEach(function (p) {
+    const target = clean_(p.target);
+    if (!target) return;
+    const id = Utilities.getUuid();
+    const courier = normalizeCourier_(p.courier);
+    const cod = normalizeCod_(p.cod);
+    rows.push([id, now, target, courier, cod, 'pending', '', ctx.user.username]);
+    out.push({ clientId: p.clientId || null, id: id, createdAt: now, target: target, courier: courier, cod: cod, status: 'pending', receivedAt: '', createdBy: ctx.user.username });
+  });
+  if (!rows.length) fail_('ไม่มีรายการที่ต้องบันทึก (ต้องระบุห้อง/ชื่อ)', 'VALIDATION');
+  appendRows_(parcelSheet_(ctx.dorm.dormId), rows);
+  return { saved: rows.length, parcels: out };
 }
-function dormTokens() {
-  if (!S.dorm) return [];
-  return [S.dorm.dormName].concat(String(S.dorm.aliases || '').split(/[,\n]/)).map(normName).filter((x) => x.length >= 2);
-}
-/** true = ชื่อหอบนพัสดุตรงกับหอเรา (หรืออ่านไม่ได้/ไม่มี จึงไม่เตือน) */
-function dormMatch(building) {
-  const b = normName(building);
-  if (b.length < 2) return true;
-  return dormTokens().some((t) => b.indexOf(t) > -1 || t.indexOf(b) > -1);
-}
-function isForeign(r) { return !r.saved && !r.ours && !!String(r.building || '').trim() && !dormMatch(r.building); }
 
-function renderRows() {
-  $('rowCount').textContent = S.rows.length;
-  const fc = S.rows.filter(isForeign).length;
-  $('foreignBanner').classList.toggle('hidden', fc === 0);
-  $('foreignCount').textContent = fc;
-  if (!S.rows.length) {
-    $('rowsBody').innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 py-6 text-sm">ยังไม่มีรายการ — สแกนรูป หรือกด "เพิ่มแถว"</td></tr>';
-    return;
+function markReceived_(req) {
+  const ctx = authenticate_(req.token);
+  const ids = {};
+  (Array.isArray(req.ids) ? req.ids : []).forEach(function (id) { ids[String(id)] = true; });
+  const sh = parcelSheet_(ctx.dorm.dormId);
+  const last = sh.getLastRow();
+  if (last < 2) return { updated: 0 };
+  const range = sh.getRange(2, 1, last - 1, CONFIG.PARCEL_HEADERS.length);
+  const vals = range.getDisplayValues();
+  const now = nowIso_();
+  let updated = 0;
+  vals.forEach(function (row) {
+    if (ids[row[0]] && row[5] !== 'received') {
+      row[5] = 'received';
+      row[6] = now;
+      updated++;
+    }
+  });
+  if (updated) range.setNumberFormat('@').setValues(vals);
+  return { updated: updated, receivedAt: now };
+}
+
+function clearAllParcels_(req) {
+  const ctx = authenticate_(req.token);
+  requireOwner_(ctx);
+  const sh = parcelSheet_(ctx.dorm.dormId);
+  const last = sh.getLastRow();
+  let removed = 0;
+  if (last > 1) {
+    removed = last - 1;
+    sh.getRange(2, 1, removed, CONFIG.PARCEL_HEADERS.length).clearContent();
   }
-  $('rowsBody').innerHTML = S.rows.map((r, i) => {
-    const fo = isForeign(r);
-    return '<tr data-uid="' + r.uid + '" class="' + (r.saved ? 'bg-green-50' : fo ? 'bg-red-50' : '') + '">' +
-    '<td class="text-xs text-slate-400">' + (i + 1) + '</td>' +
-    '<td><input class="inp" data-f="target" value="' + esc(r.target) + '" placeholder="ห้อง/ชื่อ"></td>' +
-    '<td><input class="inp' + (fo ? ' !border-red-400' : '') + '" data-f="building" value="' + esc(r.building || '') + '" placeholder="(ไม่พบชื่อหอ)">' +
-    (fo ? '<div class="text-xs text-red-600 mt-0.5">' + ic('triangle-alert') + ' ไม่ใช่หอพักของคุณ? <button data-ours="' + r.uid + '" class="underline font-semibold">เป็นของหอเรา</button></div>' : '') + '</td>' +
-    '<td><select class="inp" data-f="courier">' + COURIERS.map((c) => '<option' + (c === r.courier ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></td>' +
-    '<td><input class="inp" data-f="cod" inputmode="decimal" value="' + esc(r.cod) + '"></td>' +
-    '<td class="text-center">' + (r.saved ? ic('check', 'text-green-600') + ' ' : '') + '<button data-del-row="' + r.uid + '" class="text-red-600 p-1">' + ic('trash-2') + '</button></td></tr>';
-  }).join('');
+  return { removed: removed };
 }
-$('rowsBody').addEventListener('input', (e) => {
-  const tr = e.target.closest('tr'); const f = e.target.getAttribute('data-f');
-  if (!tr || !f) return;
-  const row = S.rows.find((r) => String(r.uid) === tr.dataset.uid);
-  if (row) { row[f] = e.target.value; refreshLine(false); }
-});
-$('rowsBody').addEventListener('change', (e) => {
-  const tr = e.target.closest('tr'); const f = e.target.getAttribute('data-f');
-  if (!tr || !f) return;
-  const row = S.rows.find((r) => String(r.uid) === tr.dataset.uid);
-  if (!row) return;
-  row[f] = e.target.value;
-  if (f === 'building') row.ours = false;
-  if (f === 'building') renderRows();
-  refreshLine(false);
-});
-$('rowsBody').onclick = (e) => {
-  const del = e.target.getAttribute('data-del-row');
-  if (del) { S.rows = S.rows.filter((r) => String(r.uid) !== del); renderRows(); refreshLine(false); return; }
-  const ours = e.target.getAttribute('data-ours');
-  if (ours) { const row = S.rows.find((r) => String(r.uid) === ours); if (row) { row.ours = true; renderRows(); refreshLine(false); } }
-};
-$('btnDelForeign').onclick = () => {
-  const n = S.rows.filter(isForeign).length;
-  if (!n) return;
-  if (!confirm('ลบ ' + n + ' รายการที่ไม่ใช่หอพักของคุณออกจากรายการ?')) return;
-  S.rows = S.rows.filter((r) => !isForeign(r));
-  renderRows(); refreshLine(false);
-  toast('ลบ ' + n + ' รายการแล้ว');
-};
-$('btnAddRow').onclick = () => { S.rows.push({ uid: S.uid++, target: '', courier: 'Other', cod: 'None', saved: false }); renderRows(); refreshLine(false); };
-$('btnResetRows').onclick = () => {
-  if (S.rows.some((r) => !r.saved) && !confirm('มีรายการที่ยังไม่ได้บันทึก ต้องการล้างทั้งหมดหรือไม่?')) return;
-  S.rows = []; S.lineEdited = false; renderRows(); refreshLine(true);
-};
-
-$('btnSave').onclick = async () => {
-  const todo = S.rows.filter((r) => !r.saved && String(r.target).trim());
-  if (!todo.length) { toast(S.rows.some((r) => !r.saved) ? 'กรุณาระบุห้อง/ชื่อก่อนบันทึก' : 'ไม่มีรายการใหม่ให้บันทึก', 'warn'); return; }
-  const fo = todo.filter(isForeign).length;
-  if (fo && !confirm('มี ' + fo + ' รายการที่อาจไม่ใช่หอพักของคุณ (แถวสีแดง)\nต้องการบันทึกเข้าคลังด้วยหรือไม่?\n\nกด ยกเลิก เพื่อกลับไปลบ/ตรวจสอบก่อน')) return;
-  const data = await run('กำลังบันทึก...', () => api('save_parcels', { parcels: todo.map((r) => ({ clientId: r.uid, target: r.target, courier: r.courier, cod: r.cod })) }));
-  if (!data) return;
-  const map = {}; data.parcels.forEach((p) => { map[String(p.clientId)] = p; });
-  S.rows.forEach((r) => { const p = map[String(r.uid)]; if (p) { r.saved = true; r.courier = p.courier; r.cod = p.cod; r.target = p.target; } });
-  S.parcels = S.parcels.concat(data.parcels);
-  renderRows(); refreshLine(false);
-  toast('บันทึก ' + data.saved + ' รายการเข้าคลังแล้ว');
-};
-
-/* --- จัดกลุ่มข้อความ LINE --- */
-function groupParcels(list) {
-  const m = new Map();
-  list.forEach((p) => {
-    const t = String(p.target || '').trim().replace(/\s+/g, ' ');
-    if (!t) return;
-    const k = normKey(t);
-    if (!m.has(k)) m.set(k, { target: t, items: [] });
-    m.get(k).items.push(p);
-  });
-  return Array.from(m.values());
-}
-function buildLineText(list) {
-  const groups = groupParcels(list);
-  const lines = groups.map((g) => {
-    const cnt = {}; g.items.forEach((p) => { cnt[p.courier || 'Other'] = (cnt[p.courier || 'Other'] || 0) + 1; });
-    const couriers = Object.keys(cnt).map((c) => c + (cnt[c] > 1 ? ' x' + cnt[c] : '')).join(', ');
-    const cod = g.items.reduce((s, p) => s + codNum(p.cod), 0);
-    return '• ' + g.target + ' : ' + g.items.length + ' ชิ้น (' + couriers + ')' + (cod > 0 ? ' | COD ' + cod.toLocaleString('th-TH') + ' บาท' : '');
-  });
-  if (!lines.length) return '';
-  return [applyTpl(S.dorm ? S.dorm.tplHeader : ''), '', lines.join('\n'), '', applyTpl(S.dorm ? S.dorm.tplFooter : '')].join('\n').trim();
-}
-function refreshLine(force) {
-  if (force) S.lineEdited = false;
-  if (S.lineEdited) return;
-  $('lineText').value = buildLineText(S.rows.filter((r) => !isForeign(r)));
-}
-$('lineText').addEventListener('input', () => { S.lineEdited = true; });
-$('btnRegen').onclick = () => { S.lineEdited = false; refreshLine(true); };
-$('btnLineOpen').onclick = () => openLine($('lineText').value);
-$('btnLineCopy').onclick = () => copyText($('lineText').value);
 
 /* ============================================================
- *  TAB 2 — คลัง & ตกค้าง
+ *  Settings / staff
  * ============================================================ */
-async function loadParcels(silent) {
-  if (!S.token) return;
-  const fn = async () => { const d = await api('list_parcels'); S.parcels = d.parcels || []; renderStock(); renderStats(); return d; };
-  if (silent) { try { await fn(); } catch (e) { toast(e.message, 'error'); } }
-  else await run('กำลังโหลดข้อมูล...', fn);
-}
-function pendingList() {
-  return S.parcels.filter((p) => p.status === 'pending').sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-}
-function levelOf(days) { return days >= 7 ? 'crit' : days >= 3 ? 'old' : 'new'; }
 
-function renderStock() {
-  const list = pendingList();
-  $('pendCount').textContent = list.length;
-  let cn = 0, co = 0, cc = 0;
-  $('stockBody').innerHTML = list.map((p) => {
-    const d = daysSince(p.createdAt); const lv = levelOf(d);
-    if (lv === 'new') cn++; else if (lv === 'old') co++; else cc++;
-    const badge = lv === 'crit' ? '<span class="px-2 py-0.5 rounded-full text-xs bg-red-600 text-white">วิกฤต</span>'
-      : lv === 'old' ? '<span class="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">ค้างนาน</span>'
-      : '<span class="px-2 py-0.5 rounded-full text-xs bg-green-600 text-white">เข้าใหม่</span>';
-    return '<tr class="row-' + lv + '"><td><input type="checkbox" data-sel="' + esc(p.id) + '"' + (S.selected[p.id] ? ' checked' : '') + '></td>' +
-      '<td class="font-semibold">' + esc(p.target) + '</td><td>' + esc(p.courier) + '</td>' +
-      '<td>' + (p.cod && p.cod !== 'None' ? esc(p.cod) : '-') + '</td><td class="text-xs">' + fmtDate(p.createdAt) + '</td>' +
-      '<td class="font-semibold">' + d + ' วัน</td><td>' + badge + '</td>' +
-      '<td><button data-recv="' + esc(p.id) + '" class="btn btn-green !py-1 !px-2 !text-xs">รับแล้ว</button></td></tr>';
-  }).join('');
-  $('cNew').textContent = cn; $('cOld').textContent = co; $('cCrit').textContent = cc;
-  $('stockEmpty').classList.toggle('hidden', list.length > 0);
-  $('chkAll').checked = false;
+function saveDormSettings_(req) {
+  const ctx = authenticate_(req.token);
+  requireOwner_(ctx);
+  const header = String(req.tplHeader == null ? '' : req.tplHeader).substring(0, 2000);
+  const footer = String(req.tplFooter == null ? '' : req.tplFooter).substring(0, 2000);
+  const aliases = String(req.aliases == null ? ctx.dorm.aliases || '' : req.aliases).replace(/\s+/g, ' ').trim().substring(0, 500);
+  const sh = dormsSheet_();
+  sh.getRange(ctx.dorm._row, 3, 1, 3).setNumberFormat('@').setValues([[header, footer, aliases]]);
+  if (!sh.getRange(1, 5).getValue()) sh.getRange(1, 5).setValue('aliases').setFontWeight('bold');
+  return { dorm: { dormId: ctx.dorm.dormId, dormName: ctx.dorm.dormName, tplHeader: header, tplFooter: footer, aliases: aliases } };
 }
-$('stockBody').onclick = async (e) => {
-  const rid = e.target.getAttribute('data-recv');
-  if (rid) { await receive([rid]); return; }
-  const sid = e.target.getAttribute('data-sel');
-  if (sid) { if (e.target.checked) S.selected[sid] = true; else delete S.selected[sid]; }
-};
-$('chkAll').onchange = (e) => {
-  S.selected = {};
-  if (e.target.checked) pendingList().forEach((p) => { S.selected[p.id] = true; });
-  document.querySelectorAll('[data-sel]').forEach((c) => { c.checked = e.target.checked; });
-};
-async function receive(ids) {
-  const d = await run('กำลังอัปเดต...', () => api('mark_received', { ids: ids }));
-  if (!d) return;
-  const now = d.receivedAt || new Date().toISOString();
-  S.parcels.forEach((p) => { if (ids.indexOf(p.id) > -1) { p.status = 'received'; p.receivedAt = now; } });
-  ids.forEach((id) => delete S.selected[id]);
-  renderStock(); renderStats();
-  toast('อัปเดตเป็น "รับแล้ว" ' + d.updated + ' รายการ');
+
+function addStaff_(req) {
+  const ctx = authenticate_(req.token);
+  requireOwner_(ctx);
+  const username = clean_(req.username);
+  const password = String(req.password || '');
+  if (!/^\S{3,40}$/.test(username)) fail_('Username ต้องยาว 3-40 ตัวอักษร และห้ามมีช่องว่าง', 'VALIDATION');
+  if (password.length < 6) fail_('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร', 'VALIDATION');
+  if (userRows_(username).length) fail_('Username นี้ถูกใช้แล้ว กรุณาตั้งชื่ออื่น', 'DUPLICATE');
+  appendRows_(usersSheet_(), [[username, hashPassword_(password), 'staff', ctx.dorm.dormId, ctx.dorm.dormName]]);
+  return { username: username, role: 'staff' };
 }
-$('btnReceiveSel').onclick = () => {
-  const ids = Object.keys(S.selected);
-  if (!ids.length) { toast('เลือกพัสดุที่ต้องการก่อน (ติ๊กช่องด้านซ้าย)', 'warn'); return; }
-  receive(ids);
-};
-$('btnReload').onclick = () => loadParcels(false);
-
-function openLineModal(title, text) {
-  $('lmTitle').textContent = title; $('lmText').value = text; $('lineModal').classList.remove('hidden');
-}
-$('lmClose').onclick = () => $('lineModal').classList.add('hidden');
-$('lmCopy').onclick = () => copyText($('lmText').value);
-$('lmOpen').onclick = () => openLine($('lmText').value);
-
-$('btnRemind').onclick = () => {
-  const overdue = pendingList().filter((p) => daysSince(p.createdAt) >= 3);
-  if (!overdue.length) { toast('ไม่มีพัสดุค้างเกิน 3 วัน', 'warn'); return; }
-  const groups = groupParcels(overdue).map((g) => {
-    const maxDays = Math.max.apply(null, g.items.map((p) => daysSince(p.createdAt)));
-    const cod = g.items.reduce((s, p) => s + codNum(p.cod), 0);
-    return { text: '• ' + g.target + ' : ' + g.items.length + ' ชิ้น (ค้างนานสุด ' + maxDays + ' วัน)' + (cod > 0 ? ' | COD ' + cod.toLocaleString('th-TH') + ' บาท' : ''), maxDays: maxDays };
-  }).sort((a, b) => b.maxDays - a.maxDays);
-  const text = ['⚠️ แจ้งเตือนพัสดุตกค้าง — ' + S.dorm.dormName, 'ประจำวันที่ ' + todayTh(), '', groups.map((g) => g.text).join('\n'), '', 'กรุณามารับพัสดุโดยเร็วที่สุด หากไม่สะดวกโปรดแจ้งเจ้าหน้าที่ 🙏'].join('\n');
-  openLineModal('ทวงพัสดุค้างเกิน 3 วัน (' + overdue.length + ' ชิ้น)', text);
-};
-
-$('btnClearAll').onclick = async () => {
-  if (!confirm('ลบข้อมูลพัสดุ "ทั้งหมด" ของหอพักนี้ (ทั้งค้างรับและรับแล้ว)?\nไม่สามารถกู้คืนได้')) return;
-  const word = prompt('พิมพ์คำว่า  ลบทั้งหมด  เพื่อยืนยัน');
-  if (word === null) return;
-  if (word.trim() !== 'ลบทั้งหมด') { toast('ยกเลิก: พิมพ์ยืนยันไม่ตรง', 'warn'); return; }
-  const d = await run('กำลังลบข้อมูล...', () => api('clear_all_parcels'));
-  if (d) { S.parcels = []; S.selected = {}; renderStock(); renderStats(); toast('ลบข้อมูลแล้ว ' + d.removed + ' รายการ'); }
-};
 
 /* ============================================================
- *  TAB 3 — สถิติ
+ *  AI (Gemini) — ยิงขนานด้วย UrlFetchApp.fetchAll
  * ============================================================ */
-function monthKey(iso) {
-  const d = new Date(iso);
-  if (isNaN(d)) return '';
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+
+function aiScanBatch_(req) {
+  if (!parseToken_(req.token)) fail_('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'AUTH'); // ตรวจ token อย่างเดียว ไม่อ่านชีต (เร็วกว่า)
+  const images = Array.isArray(req.images) ? req.images : [];
+  if (!images.length) fail_('ไม่มีรูปภาพ', 'VALIDATION');
+  if (images.length > CONFIG.MAX_IMAGES_PER_BATCH) fail_('ส่งรูปได้ไม่เกิน ' + CONFIG.MAX_IMAGES_PER_BATCH + ' รูปต่อครั้ง', 'VALIDATION');
+  const t0 = Date.now();
+  const results = callGeminiBackendParallel(images);
+  return { results: results, ms: Date.now() - t0 };
 }
-function statData() {
-  const m = $('monthPick').value;
-  const q = normKey($('statSearch').value);
-  const list = S.parcels.filter((p) => (!m || monthKey(p.createdAt) === m) && (!q || normKey(p.target).indexOf(q) > -1));
-  const map = new Map();
-  list.forEach((p) => {
-    const k = normKey(p.target); if (!k) return;
-    if (!map.has(k)) map.set(k, { target: p.target, count: 0, cod: 0, last: p.createdAt });
-    const g = map.get(k); g.count++; g.cod += codNum(p.cod);
-    if (new Date(p.createdAt) > new Date(g.last)) g.last = p.createdAt;
-  });
-  const rooms = Array.from(map.values()).sort((a, b) => b.count - a.count || String(a.target).localeCompare(String(b.target), 'th'));
-  return { list: list, rooms: rooms };
+
+function getApiKey_() {
+  const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!key) fail_('ยังไม่ได้ตั้งค่า GEMINI_API_KEY ใน Script Properties', 'CONFIG');
+  return key;
 }
-function renderStats() {
-  const { list, rooms } = statData();
-  const total = list.length;
-  $('sTotal').textContent = total;
-  $('sRooms').textContent = rooms.length;
-  $('sAvg').textContent = rooms.length ? (total / rooms.length).toFixed(2) : '0';
-  let perDay = 0;
-  const m = $('monthPick').value;
-  if (m && total) {
-    const [y, mo] = m.split('-').map(Number);
-    const now = new Date();
-    const dim = (y === now.getFullYear() && mo === now.getMonth() + 1) ? now.getDate() : new Date(y, mo, 0).getDate();
-    perDay = total / dim;
+
+function geminiUrl_(model) {
+  // API Key อยู่ใน query string เท่านั้น (ห้ามส่งผ่าน Header x-goog-api-key)
+  return 'https://generativelanguage.googleapis.com/v1beta/models/' + (model || CONFIG.GEMINI_MODEL) +
+    ':generateContent?key=' + encodeURIComponent(getApiKey_());
+}
+
+function buildAiPrompt_(n) {
+  return [
+    'You are an OCR assistant at a dormitory parcel counter. You will receive ' + n + ' photo(s) of parcels / shipping labels, each introduced by a line "Image k:".',
+    'For EVERY image, in order, extract these fields:',
+    '- TARGET: the recipient ROOM NUMBER if there is one; otherwise the recipient NAME.',
+    '    * If the recipient address contains a room number (e.g. "ห้อง 305", "Room 305", "Rm.12", "A302", "B-1204"), output ONLY that room number (e.g. "305", "A302") - no name, no words like "ห้อง" or "Room".',
+    '    * A room number is the dorm room, NOT a house number, moo, soi, road, or postal code.',
+    '    * If there is no room number at all, output the recipient name exactly as printed (Thai or English).',
+    '    * If unreadable use "".',
+    '- COURIER: the carrier, e.g. Flash Express, Shopee Express (SPX), J&T Express, Kerry (KEX), Thailand Post (EMS), or other.',
+    '- COD: the cash-on-delivery amount in baht (digits only). If there is no COD, use "None".',
+    '- BUILDING: the name of the dormitory / apartment / condominium / building in the RECIPIENT address (e.g. "KP House", "ลุมพินี คอนโด", "หอพัก...", "อาคาร..."). Use only the recipient (TO / ผู้รับ) side, never the sender or shop address. If none is printed use "".',
+    'Respond with ONLY a valid JSON array with exactly ' + n + ' object(s), one per image, in image order:',
+    '[{"image": 1, "target": "...", "courier": "...", "cod": "...", "building": "..."}]'
+  ].join('\n');
+}
+
+function splitDataUrl_(s) {
+  const str = String(s || '');
+  const m = str.match(/^data:([^;,]+);base64,(.*)$/);
+  if (m) return { mime: m[1], data: m[2] };
+  return { mime: 'image/jpeg', data: str };
+}
+
+// ลดเวลา "คิด" ของโมเดล: ลองตามลำดับ minimal -> low -> none (ถ้า API ปฏิเสธจะถอยอัตโนมัติและจำค่าที่ใช้ได้ไว้ 6 ชม.)
+const THINK_MODES = ['minimal', 'low', 'none'];
+function getThinkIdx_() {
+  const v = CacheService.getScriptCache().get('thinkIdx');
+  const i = v == null ? 0 : parseInt(v, 10);
+  return isNaN(i) ? 0 : Math.min(Math.max(i, 0), THINK_MODES.length - 1);
+}
+function genConfig_(thinkIdx) {
+  const cfg = { temperature: 0.1, maxOutputTokens: 4096, responseMimeType: 'application/json' };
+  const mode = THINK_MODES[thinkIdx || 0];
+  if (mode !== 'none') cfg.thinkingConfig = { thinkingLevel: mode };
+  return cfg;
+}
+
+/**
+ * รายชื่อโมเดลที่ใช้: ตัวหลัก CONFIG.GEMINI_MODEL เสมอ
+ * ถ้าตั้ง Script Property ชื่อ GEMINI_FALLBACK_MODELS (คั่นด้วย ,) จะใช้เป็นตัวสำรองเมื่อโควตารายวันของตัวหลักเต็ม
+ * (ไม่ตั้ง = ใช้ตัวหลักตัวเดียวเหมือนเดิม) โมเดลที่โควตาเต็มจะถูกข้ามไป 1 ชม. เพื่อไม่ให้เสียเวลายิงซ้ำ
+ */
+function getModelList_() {
+  // ไม่ตั้ง property = ใช้ตัวสำรองเริ่มต้น (CONFIG.DEFAULT_FALLBACKS), ตั้งเป็น none = ปิดตัวสำรอง
+  const raw = String(PropertiesService.getScriptProperties().getProperty('GEMINI_FALLBACK_MODELS') || CONFIG.DEFAULT_FALLBACKS);
+  const extra = (raw.trim().toLowerCase() === 'none' ? '' : raw).split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s && s !== CONFIG.GEMINI_MODEL; });
+  const all = [CONFIG.GEMINI_MODEL].concat(extra);
+  const cache = CacheService.getScriptCache();
+  const usable = all.filter(function (m) { return !cache.get('blk_' + m); });
+  return usable.length ? usable : all;
+}
+
+function chunkIdx_(n, size) {
+  const out = [];
+  for (let i = 0; i < n; i += size) {
+    const grp = [];
+    for (let j = i; j < Math.min(n, i + size); j++) grp.push(j);
+    out.push(grp);
   }
-  $('sAvgDay').textContent = perDay ? 'วันละ ~' + perDay.toFixed(1) + ' ชิ้น' : '';
-  $('statBody').innerHTML = rooms.map((g) =>
-    '<tr><td class="font-semibold">' + esc(g.target) + '</td><td class="text-right">' + g.count + '</td><td class="text-right">' + (g.cod ? g.cod.toLocaleString('th-TH') : '-') + '</td><td class="text-xs">' + fmtDate(g.last) + '</td></tr>').join('');
-  $('statEmpty').classList.toggle('hidden', rooms.length > 0);
+  return out;
 }
-$('monthPick').onchange = renderStats;
-$('statSearch').oninput = renderStats;
 
-function csvCell(v) { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
-$('btnCsv').onclick = () => {
-  const { list, rooms } = statData();
-  if (!list.length) { toast('ไม่มีข้อมูลให้ดาวน์โหลด', 'warn'); return; }
-  const m = $('monthPick').value || 'all';
-  const lines = [];
-  lines.push(['สรุปรายห้อง', 'เดือน ' + m].map(csvCell).join(','));
-  lines.push(['ห้อง/ชื่อ', 'จำนวน(ชิ้น)', 'COD รวม(บาท)', 'ล่าสุด'].map(csvCell).join(','));
-  rooms.forEach((g) => lines.push([g.target, g.count, g.cod, fmtDate(g.last)].map(csvCell).join(',')));
-  lines.push('');
-  lines.push(['รายการละเอียด'].map(csvCell).join(','));
-  lines.push(['วันที่เข้า', 'ห้อง/ชื่อ', 'ขนส่ง', 'COD', 'สถานะ', 'วันที่รับ'].map(csvCell).join(','));
-  list.slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach((p) =>
-    lines.push([fmtDate(p.createdAt), p.target, p.courier, p.cod, p.status === 'received' ? 'รับแล้ว' : 'ค้างรับ', p.receivedAt ? fmtDate(p.receivedAt) : ''].map(csvCell).join(',')));
-  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'parcel-stats-' + m + '.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-};
-
-/* ============================================================
- *  TAB 4 — ตั้งค่า & ทีมงาน
- * ============================================================ */
-$('btnSaveTpl').onclick = async () => {
-  const d = await run('กำลังบันทึก...', () => api('save_dorm_settings', { tplHeader: $('tplHeader').value, tplFooter: $('tplFooter').value, aliases: $('tplAliases').value }));
-  if (d) { S.dorm = d.dorm; renderRows(); refreshLine(true); toast('บันทึกการตั้งค่าแล้ว'); }
-};
-$('staffForm').onsubmit = async (ev) => {
-  ev.preventDefault();
-  const d = await run('กำลังเพิ่ม Staff...', () => api('add_staff', { username: $('stUser').value, password: $('stPass').value }));
-  if (d) { toast('เพิ่ม Staff "' + d.username + '" แล้ว'); $('stUser').value = ''; $('stPass').value = ''; }
-};
-
-/* ============================================================
- *  Boot
- * ============================================================ */
-/* ============================================================
- *  หลายหอพัก: สลับ / เพิ่ม
- * ============================================================ */
-function resetWork() {
-  S.rows = []; S.images = []; S.parcels = []; S.selected = {}; S.lineEdited = false;
-  renderThumbs(); renderRows();
+/** 1 คำขอ Gemini = หลายรูป (แต่ละรูปมีป้าย "Image k:") */
+function buildGeminiRequest_(images, thinkIdx, model) {
+  const parts = [{ text: buildAiPrompt_(images.length) }];
+  images.forEach(function (b64, k) {
+    const img = splitDataUrl_(b64);
+    parts.push({ text: 'Image ' + (k + 1) + ':' });
+    parts.push({ inline_data: { mime_type: img.mime, data: img.data } });
+  });
+  const body = {
+    contents: [{ role: 'user', parts: parts }],
+    generationConfig: genConfig_(model === CONFIG.GEMINI_MODEL ? thinkIdx : THINK_MODES.length - 1)
+  };
+  return {
+    url: geminiUrl_(model),
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(body),
+    muteHttpExceptions: true
+  };
 }
-function renderDormSwitch() {
-  const list = S.dorms || [];
-  const multi = list.length > 1;
-  $('hDorm').classList.toggle('hidden', multi);
-  const sel = $('hDormSel');
-  sel.classList.toggle('hidden', !multi);
-  sel.innerHTML = list.map((d) => '<option value="' + esc(d.dormId) + '"' + (d.dormId === S.dorm.dormId ? ' selected' : '') + '>' + esc(d.dormName) + '</option>').join('');
-  $('dormList').innerHTML = list.map((d) => {
-    const cur = d.dormId === S.dorm.dormId;
-    return '<div class="flex items-center justify-between gap-2 rounded-xl border ' + (cur ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200') + ' px-3 py-2">' +
-      '<div class="min-w-0"><div class="font-semibold truncate">' + esc(d.dormName) + '</div>' +
-      '<div class="text-xs text-slate-500">' + (d.role === 'owner' ? 'เจ้าของ' : 'Staff') + (cur ? ' • กำลังใช้งาน' : '') + '</div></div>' +
-      (cur ? ic('check', 'text-indigo-600') : '<button data-switch="' + esc(d.dormId) + '" class="btn btn-ghost !py-1 !px-3 !text-xs">สลับ</button>') + '</div>';
-  }).join('');
-}
-async function switchDorm(id) {
-  if (!id || id === S.dorm.dormId) return;
-  if (S.rows.some((r) => !r.saved && String(r.target).trim()) && !confirm('มีรายการที่ยังไม่ได้บันทึก ถ้าสลับหอพักรายการนี้จะหายไป ต้องการสลับหรือไม่?')) { renderDormSwitch(); return; }
-  const d = await run('กำลังสลับหอพัก...', () => api('switch_dorm', { dormId: id }));
-  if (d) { resetWork(); applySession(d); enterApp(); toast('สลับไปหอพัก ' + d.dorm.dormName); }
-  else renderDormSwitch();
-}
-$('hDormSel').onchange = (e) => switchDorm(e.target.value);
-$('dormList').onclick = (e) => { const id = e.target.getAttribute('data-switch'); if (id) switchDorm(id); };
-$('dormForm').onsubmit = async (ev) => {
-  ev.preventDefault();
-  if (S.rows.some((r) => !r.saved && String(r.target).trim()) && !confirm('มีรายการที่ยังไม่ได้บันทึก ถ้าเพิ่มและสลับไปหอพักใหม่รายการนี้จะหายไป ต้องการทำต่อหรือไม่?')) return;
-  const d = await run('กำลังสร้างหอพัก...', () => api('create_dorm', { dormName: $('cdName').value }));
-  if (d) { $('cdName').value = ''; resetWork(); applySession(d); enterApp(); toast('เพิ่มหอพัก ' + d.dorm.dormName + ' แล้ว'); }
-};
 
-(async function boot() {
-  renderRows(); renderThumbs();
-  let tk = null;
-  try { tk = localStorage.getItem('spm_token'); } catch (e) {}
-  if (tk && API_URL.indexOf('PASTE_') !== 0) {
-    S.token = tk;
-    showLoading('กำลังตรวจสอบการเข้าสู่ระบบ...');
+function fillErr_(results, idx, msg) {
+  idx.forEach(function (i) { if (!results[i]) results[i] = { ok: false, error: msg }; });
+}
+
+/**
+ * ยิงกลุ่มรูปขนานด้วย UrlFetchApp.fetchAll (1 กลุ่ม = 1 คำขอ) พร้อม retry / สลับโมเดลสำรอง / รอตามโควตา
+ * เขียนผลลงใน results[ดัชนีรูป]
+ */
+function runGroups_(list, groups, results) {
+  const MAX_ROUNDS = 3;
+  const models = getModelList_();
+  const cache = CacheService.getScriptCache();
+  let pending = groups.map(function (idx) { return { idx: idx, mi: 0, lastErr: '' }; });
+  let thinkIdx = getThinkIdx_();
+  const startIdx = thinkIdx;
+  let round = 0, guard = 0, bumped = false, waitMs = 0;
+
+  while (pending.length && round < MAX_ROUNDS && guard++ < 10) {
+    if (round > 0 && !bumped) { Utilities.sleep(Math.max(800 * round, waitMs)); waitMs = 0; }
+    bumped = false;
+    const batchIdx = thinkIdx;
+    const batchModels = pending.map(function (g) { return models[Math.min(g.mi, models.length - 1)]; });
+    const requests = pending.map(function (g, k) {
+      return buildGeminiRequest_(g.idx.map(function (i) { return list[i]; }), batchIdx, batchModels[k]);
+    });
+    let responses;
     try {
-      const d = await api('verify_session');
-      applySession(d); hideLoading(); enterApp(); return;
-    } catch (e) { S.token = null; try { localStorage.removeItem('spm_token'); } catch (e2) {} }
-    hideLoading();
+      responses = UrlFetchApp.fetchAll(requests);
+    } catch (err) {
+      pending.forEach(function (g) { fillErr_(results, g.idx, 'เชื่อมต่อ AI ไม่ได้: ' + err.message); });
+      pending = [];
+      break;
+    }
+    const retry = [];
+    responses.forEach(function (resp, k) {
+      const g = pending[k];
+      const code = resp.getResponseCode();
+      const text = resp.getContentText();
+      const usedModel = batchModels[k];
+      if (code === 200) {
+        const parsed = parseGeminiGroup_(text, g.idx.length);
+        if (parsed.error) { fillErr_(results, g.idx, parsed.error); return; }
+        g.idx.forEach(function (i, j) {
+          if (parsed.items[j]) { results[i] = parsed.items[j]; results[i].model = usedModel; }
+        });
+      } else if (code === 400 && /think/i.test(text) && usedModel === CONFIG.GEMINI_MODEL && batchIdx < THINK_MODES.length - 1) {
+        if (thinkIdx === batchIdx) thinkIdx++;          // โหมดคิดนี้ใช้ไม่ได้ ถอยไปโหมดถัดไปแล้วลองใหม่ทันที
+        bumped = true;
+        retry.push(g);
+      } else if ((code === 500 || code === 502 || code === 503 || code === 504) && round < MAX_ROUNDS - 1) {
+        g.lastErr = 'AI error ' + code;
+        retry.push(g);
+      } else if (code === 429) {
+        const q = describe429_(text);
+        if (q.kind === 'day' || q.zero) {
+          cache.put('blk_' + usedModel, '1', 3600);        // โควตารายวัน/ไม่มีโควตาของโมเดลนี้: พักไว้ 1 ชม.
+          if (g.mi < models.length - 1) { g.mi++; bumped = true; retry.push(g); }   // ลองโมเดลสำรองทันที
+          else fillErr_(results, g.idx, q.msg);
+        } else if (q.kind === 'minute' && q.retrySec > 0 && q.retrySec <= 30 && round < MAX_ROUNDS - 1) {
+          waitMs = Math.max(waitMs, (q.retrySec + 1) * 1000);  // เกินโควตาต่อนาที: รอตามที่ Google บอกแล้วลองใหม่เอง
+          g.lastErr = q.msg;
+          retry.push(g);
+        } else {
+          fillErr_(results, g.idx, q.msg);
+        }
+      } else if (code === 404 && g.mi < models.length - 1) {
+        cache.put('blk_' + usedModel, '1', 3600);          // ชื่อโมเดลไม่ถูกต้อง/ใช้ไม่ได้: ข้ามไปตัวถัดไป
+        g.mi++; bumped = true; retry.push(g);
+      } else {
+        fillErr_(results, g.idx, 'AI error ' + code + ': ' + extractApiError_(text));
+      }
+    });
+    pending = retry;
+    if (!bumped) round++;
   }
-  showAuth();
-})();
-</script>
-</body>
-</html>
+  pending.forEach(function (g) { fillErr_(results, g.idx, g.lastErr || 'AI ไม่ตอบกลับ (ลองหลายครั้งแล้ว)'); });
+  if (thinkIdx !== startIdx) cache.put('thinkIdx', String(thinkIdx), 21600);
+}
+
+/**
+ * รับ Array ของรูป (base64 หรือ data URL) → แบ่งกลุ่มละ CONFIG.GROUP_SIZE รูป ยิง Gemini ขนาน (1 กลุ่ม = 1 คำขอ)
+ * รูปที่โมเดลตอบตกหล่นจะถูกส่งอ่านซ้ำทีละรูปอีกรอบเดียว
+ * คืน Array ผลลัพธ์เรียงตามรูปเดิม: {ok, target, courier, cod, building} หรือ {ok:false, error}
+ */
+function callGeminiBackendParallel(base64List) {
+  const n = base64List.length;
+  const results = new Array(n);
+  runGroups_(base64List, chunkIdx_(n, CONFIG.GROUP_SIZE), results);
+  const missing = [];
+  for (let i = 0; i < n; i++) if (!results[i]) missing.push(i);
+  if (missing.length) {
+    runGroups_(base64List, missing.map(function (i) { return [i]; }), results);
+  }
+  return results.map(function (r) { return r || { ok: false, error: 'AI ไม่ตอบกลับ' }; });
+}
+
+/** อ่านรายละเอียด 429 จาก Google แล้วบอกชัดๆ ว่าเต็มแบบไหน */
+function describe429_(text) {
+  let id = '', retrySec = 0, zero = false;
+  try {
+    const err = (JSON.parse(text) || {}).error || {};
+    (err.details || []).forEach(function (d) {
+      const t = String(d['@type'] || '');
+      if (/QuotaFailure/.test(t)) (d.violations || []).forEach(function (v) { id += ' ' + (v.quotaId || v.quotaMetric || ''); });
+      if (/RetryInfo/.test(t) && d.retryDelay) retrySec = Math.ceil(parseFloat(String(d.retryDelay)) || 0);
+    });
+    if (/limit:\s*0/.test(String(err.message || ''))) zero = true;
+  } catch (e) { /* ignore */ }
+  id = id.trim();
+  let kind = 'unknown';
+  if (/PerDay/i.test(id)) kind = 'day'; else if (/PerMinute/i.test(id)) kind = 'minute';
+  let msg;
+  if (zero) msg = 'API Key นี้ไม่มีโควตาฟรีสำหรับโมเดลนี้ (limit 0) ต้องเปิด Billing ใน Google AI Studio';
+  else if (kind === 'day') msg = 'โควตารายวันของ Gemini เต็ม จะรีเซ็ตราว 14:00 น. (เวลาไทย) หรือเปิด Billing เพื่อใช้ต่อได้ทันที';
+  else if (kind === 'minute') msg = 'ส่งถี่เกินโควตาต่อนาที รอประมาณ ' + (retrySec || 60) + ' วินาทีแล้วกดอ่านใหม่';
+  else msg = 'โควตา Gemini เต็ม รอสักพักแล้วลองใหม่ หรือเปิด Billing';
+  if (id) msg += ' [' + id + ']';
+  return { kind: kind, retrySec: retrySec, zero: zero, msg: msg };
+}
+
+function extractApiError_(text) {
+  try {
+    const j = JSON.parse(text);
+    if (j && j.error && j.error.message) return String(j.error.message).substring(0, 300);
+  } catch (e) { /* ignore */ }
+  return String(text || '').substring(0, 300);
+}
+
+function parseGeminiGroup_(text, n) {
+  let data;
+  try { data = JSON.parse(text); } catch (e) { return { error: 'อ่านคำตอบจาก AI ไม่ได้' }; }
+  const cand = data.candidates && data.candidates[0];
+  if (!cand || !cand.content || !cand.content.parts) {
+    const reason = (data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason) || 'no content';
+    return { error: 'AI ไม่ตอบกลับ (' + reason + ')' };
+  }
+  const raw = cand.content.parts
+    .filter(function (p) { return typeof p.text === 'string' && !p.thought; })
+    .map(function (p) { return p.text; })
+    .join('');
+  return { items: parseAiMulti_(raw, n) };
+}
+
+function cleanJsonText_(t) {
+  return String(t || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+}
+
+function pickKey_(obj, key) {
+  const cap = key.charAt(0).toUpperCase() + key.slice(1);
+  let v = obj[key] || obj[key.toUpperCase()] || obj[cap];
+  if (v == null || v === '') {
+    // fallback: ไล่หา key แบบไม่สนตัวพิมพ์
+    Object.keys(obj).forEach(function (k) {
+      if (k.toLowerCase() === key.toLowerCase() && (v == null || v === '')) v = obj[k];
+    });
+  }
+  return v;
+}
+
+/** แปลงออบเจ็กต์ 1 รูปจาก AI ให้เป็นรูปแบบมาตรฐาน (เลขห้องล้วน / ขนส่งมาตรฐาน / COD / ชื่อหอ) */
+function normalizeParsed_(o) {
+  let target = clean_(pickKey_(o, 'target'));
+  target = target.replace(/^(ห้องเลขที่|เลขห้อง|ห้อง|room|rm\.?)\s*[:#\-]?\s*/i, '').trim();
+  return {
+    ok: true,
+    target: target,
+    courier: normalizeCourier_(pickKey_(o, 'courier')),
+    cod: normalizeCod_(pickKey_(o, 'cod')),
+    building: clean_(pickKey_(o, 'building'))
+  };
+}
+
+/** แปลงคำตอบ AI (JSON array ต่อกลุ่ม) เป็น Array ยาว n ตามลำดับรูป; ช่องที่ตกหล่นจะเป็น undefined */
+function parseAiMulti_(raw, n) {
+  const cleaned = cleanJsonText_(raw);
+  let parsed = null;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    const a = cleaned.indexOf('['), b = cleaned.lastIndexOf(']');
+    if (a > -1 && b > a) { try { parsed = JSON.parse(cleaned.substring(a, b + 1)); } catch (e2) { parsed = null; } }
+    if (!parsed) {
+      const a2 = cleaned.indexOf('{'), b2 = cleaned.lastIndexOf('}');
+      if (a2 > -1 && b2 > a2) { try { parsed = JSON.parse(cleaned.substring(a2, b2 + 1)); } catch (e3) { parsed = null; } }
+    }
+  }
+  let arr = [];
+  if (Array.isArray(parsed)) arr = parsed;
+  else if (parsed && typeof parsed === 'object') {
+    const inner = parsed.results || parsed.Results || parsed.images || parsed.items;
+    arr = Array.isArray(inner) ? inner : [parsed];
+  }
+  const items = new Array(n);
+  arr.forEach(function (o, pos) {
+    if (!o || typeof o !== 'object') return;
+    let k = parseInt(pickKey_(o, 'image'), 10);
+    if (isNaN(k)) k = parseInt(pickKey_(o, 'index'), 10);
+    k = (!isNaN(k) && k >= 1 && k <= n) ? k - 1 : pos;
+    if (k >= 0 && k < n && !items[k]) items[k] = normalizeParsed_(o);
+  });
+  return items;
+}
